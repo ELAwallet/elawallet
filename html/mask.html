@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>公告提示</title>
+    <link rel="stylesheet" type="text/css" href="../css/api.css"/>
+    <link rel="stylesheet" href="../css/ydui.css">
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/>
+    <style>
+      html,body{background: rgba(0,0,0,0) !important;overflow: hidden;}
+      ::-webkit-scrollbar{display:none;}
+    </style>
+</head>
+<body>
+  <div id="myEla"></div>
+<script type="text/javascript" src="../script/fastclick.min.js"></script>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript" src="../script/vue.js"></script>
+<script type="text/javascript" src="../script/ydui.js"></script>
+<script type="text/javascript" src="../script/jquery.js"></script>
+<script type="text/javascript" src="../script/vue-i18n.js"></script>
+<script type="text/javascript" src="../script/public.js"></script>
+<script>
+    var myEla = '';
+    apiready = function(){
+      myEla = new Vue({
+        el: "#myEla",
+        i18n,
+        data: {
+          notice:{}
+        },
+        mounted: function () {
+          var _this = this;
+          _this.notice = api.pageParam;
+          _this.$dialog.confirm({
+            title: _this.$t('系统公告'),
+            mes: _this.notice.title,
+            opts: [{txt: _this.$t('取消'),
+              callback: function() {
+                setTimeout(function(){
+                  api.closeFrame();
+                },300)
+              }
+            },
+            {txt: _this.$t('查看详情'),
+              callback: function() {
+                api.openWin({allowEdit:'true',name: 'details',url: './details.html',pageParam:{type:1,data:_this.notice}})
+              }
+            }]
+          });
+        }
+      })
+    }
+</script>
+</body>
+</html>

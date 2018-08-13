@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>交易详情</title>
+    <link rel="stylesheet" type="text/css" href="../css/api.css"/>
+    <link rel="stylesheet" href="../css/ydui.css">
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/>
+    <style>
+      html{background: #fff;height: 100%;}
+      body{height:auto !important;background: none !important;height: 100%;}
+      #myEla{padding: 1px 0.28rem;margin-top: 1.04rem;}
+      ul.list{padding-top: 0.28rem;}
+      ul.list li{height: 0.88rem;position: relative;margin-bottom: 0.26rem;}
+      ul.list li input{display: block;border-radius: 0.08rem;height: 0.88rem;line-height: 0.34rem;font-size: 0.32rem;color: #000;border:0.014rem solid #e8e8e8;width: 100%-1.528rem;padding-left: 1.8rem;transition:all 0.4s;}
+      ul.list li:last-child input{width: 100%-3.028rem;padding-right: 1rem;}
+      ul.list li input:focus{border-color: #f73a3f;box-shadow:0 0 0.12rem rgba(247,58,63,0.12)}
+      ul.list li label{display: block;line-height: 0.88rem;left: 0.34rem;top: 0;font-size: 0.32rem;color:#1f2631;position: absolute;z-index:-1;width: 1.85rem;}
+      ul.list li b{display: block;position: absolute;right: 0;top: 0;width: 0.88rem;height: 0.88rem;overflow: hidden;}
+      ul.list li b img{display: block;margin: auto;height: 0.34rem;margin-top: 0.26rem;}
+      header.page ul li b.more{color:#565656;font-size: 0.3rem;font-weight: 500;width: auto;background: none;right: 0.24rem;}
+      header.page ul li b.back{background-image: url(../image/x.svg);}
+      input#uploadImage{display: block;width: 100%;height: 100%;position: absolute;left: 0;top: 0;padding: 0;margin: 0;opacity: 0;}
+      #uploadPreview{overflow: hidden;}
+      #uploadPreview .ws_load{width: 1.58rem;height: 1.58rem;border-radius: 0.1rem;overflow: hidden;display: block;float: left;margin-right:0.18rem;position:relative;}
+      #uploadPreview img{width: 100%;height: 100%;position:absolute;left: 0;top: 0;}
+      #main{height: 100%;}
+    </style>
+</head>
+<body>
+  <div id="myEla">
+    <header class="page">
+      <ul>
+        <li>
+          <b class="back" @click="api.closeWin();"></b>
+          <span v-cloak>{{ $t('交易详情') }}</span>
+        </li>
+      </ul>
+    </header>
+    <div id="main"></div>
+  </div>
+<script type="text/javascript" src="../script/fastclick.min.js"></script>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript" src="../script/vue.js"></script>
+<script type="text/javascript" src="../script/ydui.js"></script>
+<script type="text/javascript" src="../script/jquery.js"></script>
+<script type="text/javascript" src="../script/vue-i18n.js"></script>
+<script type="text/javascript" src="../script/public.js"></script>
+<script>
+    var myEla = '';
+    apiready = function(){
+      $api.fixStatusBar( $api.dom('header') );
+      $api.fixStatusBar( $api.dom('#myEla') );
+      myEla = new Vue({
+        el: "#myEla",
+        i18n,
+        data: {
+          email:'',
+          title:'',
+          content:'',
+        },
+        mounted: function () {
+          api.openFrame({
+            name: 'elastos',
+            url: 'https://blockchain.elastos.org/tx/' + api.pageParam.txid,
+            rect: {
+              x: 0,
+              y: $api.dom('header').offsetHeight - 50,
+              w: api.winWidth,
+              h: api.winHeight - $('header').outerHeight() + 250
+            }
+          });
+          api.openFrame({
+            name: 'blockhead',
+            url: './blockhead.html',
+            rect: {
+                y: 0,
+                h: $('header').outerHeight()
+            }
+          });
+        }
+      })
+    }
+</script>
+</body>
+</html>

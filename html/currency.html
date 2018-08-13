@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>货币</title>
+    <link rel="stylesheet" type="text/css" href="../css/api.css"/>
+    <link rel="stylesheet" href="../css/ydui.css">
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/>
+    <style>
+      html{background: #f5f6f8;}
+      body{height:auto !important;background: none !important;}
+      #myEla{padding: 1px 0.28rem;margin-top: 1.04rem;}
+      #myEla ul.main li{height: 1.04rem;line-height: 1.04rem;background: #fff url() no-repeat 6.3rem center;border-radius: 0.1rem;padding-left: 0.28rem;position: relative;font-size: 0.3rem;-webkit-background-size: auto 0.26rem;background-size: auto 0.26rem;margin-top: 0.28rem;box-shadow:0 0.06rem 0.31rem rgba(0,0,0,0.04);}
+      #myEla ul.main li.active{background-image: url(../image/select.svg);}
+    </style>
+</head>
+<body>
+  <div id="myEla">
+    <header class="page">
+      <ul>
+        <li>
+          <b class="back" @click="api.closeWin();"></b>
+          <span v-cloak>{{ $t('货币') }}</span>
+        </li>
+      </ul>
+    </header>
+    <ul class="main">
+      <li v-for="list in currencyList" :class="{'active':currency == list}">
+        <div class="cont" @click="selectCont(list)">
+          <h3 v-cloak>{{list}}</h3>
+        </div>
+      </li>
+    </ul>
+  </div>
+<script type="text/javascript" src="../script/fastclick.min.js"></script>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript" src="../script/vue.js"></script>
+<script type="text/javascript" src="../script/ydui.js"></script>
+<script type="text/javascript" src="../script/jquery.js"></script>
+<script type="text/javascript" src="../script/vue-i18n.js"></script>
+<script type="text/javascript" src="../script/public.js"></script>
+<script>
+    var myEla = '';
+    apiready = function(){
+      $api.fixStatusBar( $api.dom('header') );
+      $api.fixStatusBar( $api.dom('#myEla') );
+      myEla = new Vue({
+        el: "#myEla",
+        i18n,
+        data: {
+          currencyList: [
+            'CNY',
+            'USD',
+          ],
+          currency: localStorage.currency
+        },
+        methods: {
+          selectCont:function(val){
+            this.currency = val;
+            localStorage.currency = val;
+            api.sendEvent({
+              name: 'changeCurrency'
+            });
+            setTimeout(function(){
+              api.closeWin();
+            },200);
+          }
+        }
+      })
+    }
+</script>
+</body>
+</html>

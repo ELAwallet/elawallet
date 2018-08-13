@@ -1,0 +1,198 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>交易记录</title>
+    <link rel="stylesheet" type="text/css" href="../css/api.css"/>
+    <link rel="stylesheet" href="../css/ydui.css">
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/>
+    <style>
+      html{background: #f5f6f8;}
+      #capture{background: #f5f6f8;padding: 0 0.28rem;padding-top: 1.02rem;padding-bottom: 0.5em;margin-top: -0.5rem;}
+      body{height:auto !important;background: none !important;}
+      #myEla{padding: 1px 0;margin-top: 1.04rem;}
+      .addrView ul li{overflow: hidden;line-height: 0.36rem;background: #fff;padding:0.28rem;border-radius: 0.1rem;margin-top: 0.28rem;box-shadow:0 0.08rem 0.45rem rgba(0,0,0,0.05);position: relative;}
+      .addrView ul li p{float: right;font-size: 0.32rem;color:#909090;max-width: 4.8rem;word-wrap:break-word;text-align: justify;}
+      .addrView ul li.font p{font-size: 0.3rem;position: relative;}
+      .addrView ul li.font p b{font-weight: 400;}
+      .addrView ul li.font p span{font-size: 0.26rem;color: #f5282e;margin-left: 0.1rem;position: relative;top: -0.01rem;opacity: 0;}
+      .addrView ul li.font p .active{opacity: 1;}
+      .addrView ul li label{font-size: 0.3rem;color: #000000;display: block;}
+      .iconBox{text-align: center;margin-bottom: 0.62rem;position: relative;}
+      .iconBox .icon{width: 1rem;height: 1rem;border-radius: 50%;background:#ff3366 url(../image/wallet/fk.png) no-repeat center center;-webkit-background-size:0.64rem auto;background-size:0.64rem auto;box-shadow: 0 0.1rem 0.42rem rgba(0,0,0,0.1);margin: auto;}
+      .iconBox h3{line-height: 0.4rem;}
+      .iconBox h3 b{color: #f5282e;font-weight: 500;font-size: 0.4rem;text-shadow: 0 0.02rem 0.08rem rgba(0,0,0,0.1);}
+      .iconBox.icon_received .icon{background-image: url(../image/wallet/sk.png);background-color: #0a1f83;}
+      .iconBox.icon_received h3 b{color: #233aa5;}
+      .iconBox.icon_moved .icon{background-image: url(../image/zy.png);background-color: #ffb610;}
+      .iconBox.icon_moved h3 b{color: #ffb610;}
+      .iconBox.icon_invalid .icon{background-image: url(../image/wallet/sk.png);background-color: #000;}
+      .iconBox.icon_invalid h3 b{color: #000;}
+      header.page ul li b.more{background:url(../image/share.svg) no-repeat center center;-webkit-background-size: 0.44rem auto;background-size: 0.44rem auto;}
+      canvas{height: auto !important;}
+    </style>
+</head>
+<body>
+  <div id="myEla">
+    <header class="page">
+      <ul>
+        <li>
+          <b class="back" @click="api.closeWin();"></b>
+          <span v-cloak>{{text[tranData.action]}}</span>
+          <b class="more" @click="share()"></b>
+        </li>
+      </ul>
+    </header>
+    <div id="capture">
+      <div class="iconBox" :class="'icon_'+tranData.action">
+        <div class="icon"></div>
+        <h3><b v-cloak><span v-if="tranData.action == 'received'">+</span><span v-if="tranData.action == 'sent'">-</span>{{(tranData.amount/100000000).toFixed(5)}}ELA</b></h3>
+      </div>
+      <div class="addrView">
+        <ul>
+          <li class="font">
+            <p v-cloak><b @click="copy(tranData.txid)">{{ tranData.txid }}</b> <span :class="{'active':block}" @click="api.openWin({allowEdit:'true',name: 'block',url: './block.html',pageParam:{txid:tranData.txid},animation:{type:'movein',subType:'from_bottom',duration:500}})">{{ $t('查看区块') }}</span></p>
+            <label v-cloak>{{ $t('交易哈希') }}</label>
+          </li>
+          <li class="font" @click="copy(tranData.addressTo)" v-if="tranData.addressTo && tranData.addressTo != 'N/A'">
+            <p v-cloak>{{ tranData.addressTo }}</p>
+            <label v-cloak>{{ $t('收款地址') }}</label>
+          </li>
+          <li>
+            <p v-cloak>{{ tranData.fees/100000000 }} ELA</p>
+            <label v-cloak>{{ $t('手续费') }}</label>
+          </li>
+          <li v-if="tranData.outputs && tranData.outputs.length && tranData.outputs[0].message">
+            <p v-cloak>{{ tranData.outputs[0].message }}</p>
+            <label v-cloak>{{ $t('备注') }}</label>
+          </li>
+          <li>
+            <p v-cloak>{{ tranData.confirmations }}</p>
+            <label v-cloak>{{ $t('确认量') }}</label>
+          </li>
+          <li>
+            <p v-cloak>{{ tranData.time|dataTime }}</p>
+            <label v-cloak>{{ $t('交易时间') }}</label>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+<script type="text/javascript" src="../script/fastclick.min.js"></script>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript" src="../script/vue.js"></script>
+<script type="text/javascript" src="../script/ydui.js"></script>
+<script type="text/javascript" src="../script/jquery.js"></script>
+<script type="text/javascript" src="../script/vue-i18n.js"></script>
+<script type="text/javascript" src="../script/public.js"></script>
+<script type="text/javascript" src="../script/html2canvas.min.js"></script>
+<script>
+    var myEla = '';
+    apiready = function(){
+      $api.fixStatusBar( $api.dom('header') );
+      $api.fixStatusBar( $api.dom('#myEla') );
+      myEla = new Vue({
+        el: "#myEla",
+        i18n,
+        data: {
+          tranData:{},
+          text:{},
+          block:true,
+          winWidth : ''
+        },
+        mounted: function () {
+          this.tranData = api.pageParam
+          this.text = {
+            received:this.$t('已接收'),
+            sent:this.$t('已发送'),
+            moved:this.$t('已调动'),
+            invalid:this.$t('无效'),
+          }
+        },
+        methods: {
+          copy:function(val){
+            copy(this,val)
+          },
+          share:function(){
+            var _this = this;
+            _this.$dialog.loading.open(this.$t('请稍后'));
+            _this.block = false;
+            setTimeout(function(){
+              html2canvas(document.getElementById('capture')).then(function(canvas) {
+                var content=canvas.getContext("2d");
+                var width=canvas.getAttribute("width");
+                _this.winWidth = parseInt(width);
+                var height=canvas.getAttribute("height");
+                var data=content.getImageData(0,0,width,height);
+                height=parseInt(height)+_this.size(530);
+                canvas.setAttribute("height",height);
+                content.fillStyle = '#f5f6f8';
+                content.fillRect(0, 0, width, height);
+                content.putImageData(data,0,0);
+                _this.block = true;
+                content.fillStyle = '#999';
+                content.font= _this.size(32) + "px Arial";
+                content.textAlign="center";
+                content.fillText(_this.$t('长按识别下载'),_this.size(260),height - _this.size(480) + _this.size(370));
+                content.fillStyle = $('.iconBox h3 b').css('color');
+                content.font=_this.size(38) + "px Arial";
+                content.fillText(_this.text[_this.tranData.action],_this.size(540),_this.size(432));
+                content.fillStyle = '#666';
+                content.font=_this.size(42) + "px Arial";
+                content.textAlign="left";
+                content.fillText(_this.$t('ELA钱包'),_this.size(500),height - _this.size(480) + _this.size(60));
+                content.font=_this.size(38) + "px Arial";
+                content.fillText(_this.$t('最好用的亦来云钱包APP'),_this.size(500),height - _this.size(480) + _this.size(170));
+                content.fillText(_this.$t('安全、简单、强大'),_this.size(500),height - _this.size(480) + _this.size(280));
+                var imgObj = new Image();
+                imgObj.src = '../image/loadQRcode.png';
+                imgObj.onload = function(){
+                  content.drawImage(this, _this.size(100), height - _this.size(480),_this.size(320),_this.size(320));
+                  var imgData = canvas.toDataURL('image/png');
+                  var trans = api.require('trans');
+                  var imgName = "ElaQRCode_"+ Date.parse(new Date()) / 1000 +".png"
+                  trans.saveImage({
+                    base64Str: imgData.substring(22,imgData.length),
+                    imgPath:"fs://img/",
+                    imgName:imgName
+                  }, function(ret, err) {
+                    if (ret.status) {
+                      var sharedModule = api.require('shareAction');
+                      var images = '';
+                      if(api.systemType == 'ios'){
+                        images = ['fs://img/' + imgName]
+                      }
+                      _this.$dialog.loading.close();
+                      sharedModule.share({
+                        text: _this.$t('交易详情'),
+                        type: 'image',
+                        path:'fs://img/' + imgName,
+                        images:images
+                      });
+                    }
+                  });
+                }
+              });
+            },50)
+          },
+          size:function(val){
+            return val / 1080 * this.winWidth
+          }
+        },
+        filters:{
+          dataTime:function(value){
+            var datetime = new Date(value*1000);
+            function g(val){
+              val < 10 && (val = '0' + val)
+              return val;
+            }
+	          return datetime.getFullYear() + '.' + g((datetime.getMonth()+1)) + '.' + g(datetime.getDate()) + ' ' + g(datetime.getHours()) + ':' + g(datetime.getMinutes());
+          }
+        }
+      })
+    }
+</script>
+</body>
+</html>

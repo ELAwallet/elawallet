@@ -1,0 +1,199 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>付款</title>
+    <link rel="stylesheet" type="text/css" href="../css/api.css"/>
+    <link rel="stylesheet" href="../css/ydui.css">
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/>
+    <style>
+      html,body{background: rgba(0,0,0,0) !important;overflow: hidden;}
+      ::-webkit-scrollbar{display:none;}
+      #myEla{padding: 1px 0.28rem;margin-top: 1.04rem;}
+      .yd-popup-center{width: 5.28rem;height: auto;background: none;transition:all 0.2s;}
+      .yd-confirm.active{top: 66%;}
+      .yd-popup-center.active{top: 66%;}
+      .addrView .yd-confirm{width: 5.28rem;background: #fff;border-radius:0.12rem !important;overflow: hidden;}
+      .yd-confirm.mm:before{width: 0.7rem;margin: auto;background-image:url(../image/mm.png);}
+      .yd-confirm-bd input{display: block;margin:0.16rem auto;background: #fafafa;border-radius: 0.1rem;height: 0.8rem;line-height: 0.34rem;font-size: 0.3rem;color: #000;border:0.014rem solid #dfdfdf;width: 4.5rem;text-align: center;transition:all 0.4s;}
+      .yd-confirm-bd input:focus{border-color: #f73a3f;box-shadow:0 0 0.12rem rgba(247,58,63,0.12)}
+      .yd-input-password{display: none;}
+      .yd-dialog-black-mask.active .yd-confirm{position: relative;top: 100%;}
+      .yd-input{display: block;position: relative;}
+      .yd-input a.yd-input-clear{position: absolute;right: 0.26rem;top: 0.23rem;display: block;width: 0.35rem;height: 0.35rem;background:url(../image/public/clear.svg) no-repeat center center;-webkit-background-size: 100% 100%;background-size: 100% 100%;}
+      .yd-input a:after{display: none;}
+      .yd-input-password{display: none;}
+      .yd-accordion{background:none;}
+    </style>
+</head>
+<body>
+  <div id="myEla">
+    <yd-popup v-model="isSetpassword1" :close-on-masker="false" position="center">
+      <div class="yd-confirm mm">
+        <div class="yd-confirm-hd">
+          <strong class="yd-confirm-title" v-cloak>{{ $t('密码') }}</strong>
+        </div>
+        <div class="yd-confirm-bd">
+          <yd-input v-model="payPassword1" ref="payPassword1" :placeholder="$t('请输入支付密码')" type="password"></yd-input>
+        </div>
+        <div class="yd-confirm-ft">
+          <a href="javascript:;" class="yd-confirm-btn default" @click="isSetpassword1 = false;" v-cloak>{{ $t('取消') }}</a>
+          <a href="javascript:;" class="yd-confirm-btn primary" @click="func" v-cloak>{{ $t('确定') }}</a>
+        </div>
+      </div>
+    </yd-popup>
+  </div>
+<script type="text/javascript" src="../script/fastclick.min.js"></script>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript" src="../script/vue.js"></script>
+<script type="text/javascript" src="../script/ydui.js"></script>
+<script type="text/javascript" src="../script/jquery.js"></script>
+<script type="text/javascript" src="../script/vue-i18n.js"></script>
+<script type="text/javascript" src="../script/salmon.min.js"></script>
+<script type="text/javascript" src="../script/public.js"></script>
+<script>
+    var myEla = '';
+    apiready = function(){
+      $api.fixStatusBar( $api.dom('header') );
+      $api.fixStatusBar( $api.dom('#myEla') );
+      myEla = new Vue({
+        el: "#myEla",
+        i18n,
+        data: {
+          opts:{},
+          luke:{},
+          addrInfo:{
+            remarks:'',
+            number:'',
+            address:'',
+            cost:'',
+          },
+          isSetpassword1:false,
+          payPassword1:'',
+          isPassword:false,
+          func:''
+        },
+        mounted: function () {
+          var _this = this;
+          this.opts = {lang:localStorage.lang,baseUrl:localStorage.baseUrl,m:1,n:1,loglevel:'debug'};
+          this.luke = new salmon.Wallet(this.opts);
+          this.luke.client.import(JSON.parse(localStorage.walletOpen).walletJson);
+          this.isPassword = this.luke.client.isPrivKeyEncrypted();
+          // Get transaction status
+          var _txp = api.pageParam.txp;
+          if(_txp != '' && _txp){
+            if(_txp[0].status == 'pending'){
+              _this.continuepay(_txp,3)
+            }else if(_txp[0].status == 'accepted'){
+              _this.continuepay(_txp,4)
+            }
+          }
+          if(api.systemType == 'ios'){
+            $("input").focus(function(){
+              setTimeout(function(){
+                $('.yd-popup-center,.yd-dialog-black-mask').addClass('active');
+              },200)
+            })
+            $("input").blur(function(){
+              $('.yd-popup-center,.yd-dialog-black-mask').removeClass('active');
+            })
+          }
+        },
+        methods: {
+          pay3:function(txp){
+            this.$dialog.loading.open(this.$t('确认交易'));
+            var _this = this;
+            _this.luke.client.signTxProposal(txp,'',function(err,txp){
+              _this.$dialog.loading.close();
+              setTimeout(function(){
+                api.closeFrame();
+              },300)
+              if(err){
+                _this.clearPassword();
+
+                alert('error 3' + err)
+              }else{
+                _this.pay4(txp);
+              }
+            })
+          },
+          pay4:function(txp){
+            this.$dialog.loading.open(this.$t('广播交易'));
+            var _this = this;
+            _this.luke.client.broadcastTxProposal(txp,function(err,txp){
+              _this.$dialog.loading.close();
+              setTimeout(function(){
+                api.closeFrame();
+              },300)
+              if(err){
+
+                alert('error 4' + err)
+              }else{
+                _this.$dialog.toast({mes:_this.$t('<span style="font-size:0.28rem;">'+ _this.$t('交易成功，等待确认') +'</span>'),icon:'success'});
+                setTimeout(function(){
+                  api.closeWin();
+                },2400);
+              }
+              _this.clearPassword();
+            })
+          },
+          clearPassword:function(){
+            this.payPassword1 = '';
+            this.luke.client.import(JSON.parse(localStorage.walletOpen).walletJson);
+          },
+          continuepay:function(txp,type){
+            var _this = this;
+            _this.$dialog.confirm({
+              title: _this.$t('温馨提示'),
+              mes: '<span>'+ _this.$t('系统检测到您有一笔交易') +'<br>'+ txp[0].amount/100000000 +''+ txp[0].coin +'<br>'+ _this.$t('因超时被锁定，是否继续发送？') +'</span>',
+              opts: [{txt: _this.$t('取消'),stay:true,
+                callback: function() {
+                  _this.luke.client.removeTxProposal(txp[0],function(err){
+
+                  });
+                  setTimeout(function(){
+                    api.closeFrame();
+                  },300)
+                }
+              },
+              {txt: _this.$t('继续发送'),stay:true,
+                callback: function() {
+                  if(_this.isPassword){
+                    _this.isSetpassword1 = true;
+                    _this.func = function(){
+                      try{
+                        _this.luke.client.decryptPrivateKey(_this.payPassword1);
+                        _this.isSetpassword1 = false;
+                        if(type == 3){
+                          _this.pay3(txp[0])
+                        }else{
+                          _this.pay4(txp[0])
+                        }
+                      }catch(err){
+
+                        if(err=='Error: Could not decrypt'){
+                          _this.$dialog.toast({mes:_this.$t('密码错误'),icon:'error'});
+                        }else{
+                          _this.$dialog.toast({mes:_this.$t('未知错误'),icon:'error'});
+                        }
+                      }
+                    }
+                  }else{
+                    if(type == 3){
+                      _this.pay3(txp[0])
+                    }else{
+                      _this.pay4(txp[0])
+                    }
+                  }
+                }
+              }]
+            });
+          },
+        }
+      })
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>扫码遮罩</title>
+    <link rel="stylesheet" type="text/css" href="../css/api.css"/>
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/>
+    <style>
+      html,body{background: rgba(0,0,0,0) !important;overflow: hidden;}
+      #myEla{height: 100%;background:url(../image/bg.png) no-repeat center center;-webkit-background-size: 100% auto;background-size: 100% auto;position: relative;}
+      .line{position: absolute;width: 5.2rem;height: 5.2rem;left: 50%;top: 50%;margin-top: -1.04rem;transform:translate(-50%,-50%);}
+      .line img{width: 80%;display: block;margin:0 auto;animation: myfirst 2s infinite linear alternate;position: relative;top: 10%;}
+      @keyframes myfirst {
+         0% {top: 10% ;}
+         100% {top: 88%;}
+      }
+    </style>
+</head>
+<body>
+  <div id="myEla">
+    <div class="line"><img src="../image/line.png"></div>
+  </div>
+<script type="text/javascript" src="../script/fastclick.min.js"></script>
+<script type="text/javascript" src="../script/vue.js"></script>
+<script type="text/javascript" src="../script/jquery.js"></script>
+<script type="text/javascript" src="../script/vue-i18n.js"></script>
+<script type="text/javascript" src="../script/public.js"></script>
+</body>
+</html>

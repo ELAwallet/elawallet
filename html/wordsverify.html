@@ -1,0 +1,164 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>验证助记词</title>
+    <link rel="stylesheet" type="text/css" href="../css/api.css"/>
+    <link rel="stylesheet" href="../css/ydui.css">
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/>
+    <style>
+      html{background: #fff;}
+      body{height:auto !important;background: none !important;}
+      #myEla{padding: 1px 0.34rem;margin-top: 50px;}
+      .icon{text-align: center;margin-top: 0.8rem;margin-bottom: 0.6rem;}
+      .icon img{height:1.66rem;display: block;margin: auto;right: -0.19rem;position: relative;}
+      #myEla h2{font-size: 0.32rem;color: #000;line-height: 0.36rem;text-align: center;margin-bottom: 0.7rem;}
+      #myEla p{line-height: 0.44rem;color: #6c6c6c;font-size: 0.26rem;text-align: center;margin-bottom: 0.88rem;}
+      .wordsAll{margin-top: 0.7rem;}
+      .wordsAll button{background: linear-gradient(135deg,#f73a3f,#fe613d);height: 0.88rem;line-height: 0.88rem;text-align: center;width: 100%;display: block;border-radius:0.1rem;font-size: 0.32rem;color: #fff;display: block;margin-bottom: 0.34rem;}
+      .wordsAll button:last-child{border:0.014rem solid #f9483e;color: #f73a3f;background:none;}
+      .words{text-align: center;line-height: 0;}
+      .words span{color:#6c6c6c;display: inline-block;height: 0.86rem;min-width: 0.86rem;border-radius: 0.1rem;background: #f3f3f3;font-size: 0.36rem;line-height: 0.86rem;text-align: center;padding: 0 0.1rem;margin:0.1rem 0.08rem;border:0.014rem solid #f3f3f3;}
+      .wordsBottom .words span.active{background: #fef0f0;color: #f73a3f;border-color:#f73a3f;}
+      .wordsv{text-align: center;line-height: 0;margin-bottom: 0.7rem;min-height: 0.6rem;}
+      .wordsv span{font-size: 0.38rem;display: inline-block;min-width: 0.5rem;padding: 0 0.06rem;height: 0.6rem;line-height: 0.6rem;color: #000000;}
+    </style>
+</head>
+<body>
+  <div id="myEla">
+    <header class="page">
+      <ul>
+        <li>
+          <b class="back" @click="api.closeWin();"></b>
+          <span v-cloak>{{ $t('验证助记词') }}</span>
+        </li>
+      </ul>
+    </header>
+    <div class="icon"><img src="../image/wallet/wordsv.png"></div>
+    <h2 v-html="$t('请按顺序点击助记词，以确认备份是否正确')"></h2>
+    <div class="wordsTop">
+      <div class="wordsv">
+        <span v-for="(list,index) in walletwords" @click="removewords(index,list)" v-cloak>{{ list }}</span>
+      </div>
+    </div>
+    <div class="wordsBottom">
+      <div class="words">
+        <span v-for="(list,index) in walletwordsList" @click="selectwords(index)" v-cloak>{{ list }}</span>
+      </div>
+    </div>
+    <div class="wordsAll">
+      <button v-cloak @click="verification()">{{ $t('确定') }}</button>
+      <button v-cloak @click="clear()">{{ $t('清除') }}</button>
+    </div>
+  </div>
+<script type="text/javascript" src="../script/fastclick.min.js"></script>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript" src="../script/vue.js"></script>
+<script type="text/javascript" src="../script/ydui.js"></script>
+<script type="text/javascript" src="../script/jquery.js"></script>
+<script type="text/javascript" src="../script/vue-i18n.js"></script>
+<script type="text/javascript" src="../script/salmon.min.js"></script>
+<script type="text/javascript" src="../script/public.js"></script>
+<script>
+    var myEla = '';
+    apiready = function(){
+      $api.fixStatusBar( $api.dom('header') );
+      $api.fixStatusBar( $api.dom('#myEla') );
+      myEla = new Vue({
+        el: "#myEla",
+        i18n,
+        data: {
+          luke:{},
+          opts:{},
+          localWalletWords:'',
+          walletwordsList:'',
+          walletwords:[],
+          localOpen:{}
+        },
+        mounted: function () {
+          this.localOpen = JSON.parse(localStorage.walletOpen);
+          var index = api.pageParam.index;
+          if(index){
+            this.localWalletWords = index;
+          }else{
+            this.localWalletWords = this.localOpen.mnemonicWords;
+          }
+          this.walletwordsList = this.localWalletWords.split(' ');
+          this.listsort(this.walletwordsList);
+          this.opts = {lang:localStorage.lang,baseUrl:localStorage.baseUrl,m:1,n:1,loglevel:'debug'};
+          this.luke = new salmon.Wallet(this.opts);
+          this.luke.client.import(this.localOpen.walletJson);
+        },
+        methods: {
+          listsort:function(list){
+            list.sort(function(){ return 0.5 - Math.random() })
+          },
+          selectwords:function(index){
+            var even = $('.wordsBottom span').eq(index);
+            if(!even.hasClass('active')){
+              $('.wordsBottom span').eq(index).addClass('active');
+              this.walletwords.push(this.walletwordsList[index]);
+            }
+          },
+          removewords:function(index,word){
+            this.walletwords.splice(index,1);
+            var list = this.walletwordsList;
+            var index = 0;
+            for(var i=0;i<12;i++){
+              if(word == list[i]){
+                index = i;break;
+              }
+            }
+            $('.wordsBottom span').eq(index).removeClass('active');
+          },
+          // Verification of annotations
+          verification:function(){
+            var _this = this;
+            var walletId = this.localOpen.walletId;
+            if(this.walletwords.length == 12){
+              var words1 = this.walletwords.join(' ');
+              var words2 = this.localWalletWords;
+              if(words1 == words2){
+                _this.$dialog.toast({mes: _this.$t('备份成功'),icon: 'success'});
+                setTimeout(function(){
+                  if(api.pageParam.index){
+                    api.closeToWin({
+                      name: 'preferences'
+                    });
+                  }else{
+                    // Create wallet address after success
+                    _this.$dialog.loading.open(_this.$t('创建钱包地址'));
+                    _this.luke.client.createAddress({},function (err, address){
+                      if(address){
+                        setLoclaList(walletId,'address',address.address);
+                      }
+                      _this.$dialog.loading.close();
+
+                      setLoclaList(walletId,'mnemonicWords','');
+                      setLoclaList(walletId,'walletBackups',true,function(){
+                        api.closeToWin({
+                          name: 'root'
+                        });
+                      });
+                    });
+                  }
+                },1500);
+              }else{
+                this.$dialog.toast({mes: '<span style="font-size:0.28rem">'+ _this.$t('备份失败<br>请检查助记词') +'</span>',icon: 'error'});
+              }
+            }else{
+              this.$dialog.toast({mes: this.$t('助记词不完整')});
+            }
+          },
+          clear:function(){
+            this.walletwords = [];
+            $('.wordsBottom span').removeClass('active');
+          }
+        }
+      })
+    }
+</script>
+</body>
+</html>

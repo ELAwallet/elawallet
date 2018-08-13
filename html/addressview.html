@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>地址簿详情</title>
+    <link rel="stylesheet" type="text/css" href="../css/api.css"/>
+    <link rel="stylesheet" href="../css/ydui.css">
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/>
+    <style>
+      html{background: #f5f6f8;}
+      body{height:auto !important;background: none !important;}
+      #myEla{padding: 1px 0.28rem;margin-top: 1.04rem;}
+      .addrView ul li{height: 1.04rem;line-height: 1.04rem;background: #fff;padding:0 0.28rem;border-radius: 0.1rem;margin-top: 0.28rem;box-shadow:0 0.08rem 0.45rem rgba(0,0,0,0.05);position: relative;}
+      .addrView ul li p{float: right;font-size: 0.32rem;color:#909090;}
+      .addrView ul li p span{font-size: 0.26rem;}
+      .addrView ul li label{font-size: 0.3rem;color: #000000;display: block;}
+      .avButton.more{line-height: 1.04rem;font-size: 0.3rem;color: #000000;height: 1.04rem;background: #fff url(../image/public/arrow-right.svg) no-repeat 6.52rem center;padding-left: 0.28rem;border-radius: 0.1rem;margin-top: 0.28rem;box-shadow:0 0.08rem 0.45rem rgba(0,0,0,0.05);position: relative;-webkit-background-size: auto 0.32rem;background-size: auto 0.32rem;}
+      #myEla button{background: linear-gradient(135deg,#f73a3f,#fe613d);height: 0.88rem;line-height: 0.88rem;text-align: center;width: 100%;display: block;border-radius:0.1rem;font-size: 0.32rem;color: #fff;margin-top: 0.5rem;}
+    </style>
+</head>
+<body>
+  <div id="myEla">
+    <header class="page">
+      <ul>
+        <li>
+          <b class="back" @click="api.closeWin();"></b>
+          <span v-cloak>{{ $t('地址簿详情') }}</span>
+        </li>
+      </ul>
+    </header>
+    <div class="addrView">
+      <ul>
+        <li>
+          <p v-cloak>{{ addrdata.name }}</p>
+          <label v-cloak>{{ $t('名称') }}</label>
+        </li>
+        <li v-if="addrdata.email">
+          <p v-cloak>{{ addrdata.email }}</p>
+          <label v-cloak>{{ $t('邮箱') }}</label>
+        </li>
+        <li @click="copy()">
+          <p v-cloak><span>{{ addrdata.address }}</span></p>
+          <label v-cloak>{{ $t('地址') }}</label>
+        </li>
+      </ul>
+      <div class="avButton more" @click="api.openWin({allowEdit:'true',name: 'payment',url: './payment.html',pageParam:addrdata})" v-cloak>{{ $t('去付钱') }}</div>
+      <button v-cloak @click="remove()">{{ $t('移除') }}</button>
+    </div>
+  </div>
+<script type="text/javascript" src="../script/fastclick.min.js"></script>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript" src="../script/vue.js"></script>
+<script type="text/javascript" src="../script/ydui.js"></script>
+<script type="text/javascript" src="../script/jquery.js"></script>
+<script type="text/javascript" src="../script/vue-i18n.js"></script>
+<script type="text/javascript" src="../script/public.js"></script>
+<script>
+    var myEla = '';
+    apiready = function(){
+      $api.fixStatusBar( $api.dom('header') );
+      $api.fixStatusBar( $api.dom('#myEla') );
+      myEla = new Vue({
+        el: "#myEla",
+        i18n,
+        data: {
+          addrdata:{},
+        },
+        mounted: function () {
+          this.addrdata = api.pageParam
+        },
+        methods: {
+          remove:function(){
+            var _this = this;
+            _this.$dialog.confirm({
+              title: _this.$t('系统提醒'),
+              mes: _this.$t('你确定你要移除此联系人？'),
+              opts: [{txt: _this.$t('取消')},{txt: _this.$t('确定删除'),
+                callback: function() {
+                  var addrList = localStorage.addressList;
+                  addrList = addrList ? JSON.parse(addrList) : [];
+                  for(var i=0;i<addrList.length;i++){
+                    if(_this.addrdata.address == addrList[i].address){
+                      addrList.splice(i, 1);
+                      localStorage.addressList = JSON.stringify(addrList);
+                      api.execScript({
+                        name:'address',
+                        script: 'myEla.list = JSON.parse(localStorage.addressList);myEla.searchList = JSON.parse(localStorage.addressList);'
+                      });
+                      api.closeWin();
+                      return;
+                    }
+                  }
+                }
+              }]
+            });
+          },
+          copy:function(){
+            copy(this,this.addrdata.address)
+          }
+        }
+      })
+    }
+</script>
+</body>
+</html>

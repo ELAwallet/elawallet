@@ -1,0 +1,345 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>钱包的设置</title>
+    <link rel="stylesheet" type="text/css" href="../css/api.css"/>
+    <link rel="stylesheet" href="../css/ydui.css">
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/>
+    <style>
+      html{background: #f5f6f8;}
+      body{height:auto !important;background: none !important;}
+      #myEla{padding: 1px 0.28rem;margin-top: 1.04rem;}
+      .walletIcon{width: 1.54rem;height: 1.54rem;border-radius: 50%;overflow: hidden;position: relative;margin: auto;margin-top: 0.78rem;margin-bottom: 0.7rem;box-shadow: 0 0.1rem 0.42rem rgba(0,0,0,0.1);}
+      .walletIcon:before{position: absolute;left: 0;top: 0;display: block;content:'';width: 100%;height: 100%;background:url(../image/wallet-icon.png) no-repeat center center;-webkit-background-size: 0.86rem auto;background-size: 0.86rem auto;}
+      .cont{height: 1.04rem;line-height: 1.04rem;background: #fff;padding:0 0.28rem;border-radius: 0.1rem;margin-top: 0.28rem;box-shadow:0 0.08rem 0.45rem rgba(0,0,0,0.05);position: relative;}
+      .cont b{float: right;margin-top: 0.25rem;position: relative;}
+      .cont b:before{content:'';display: block;position: absolute;width: 100%;height: 100%;z-index:5;}
+      .cont.more{background: #fff url(../image/public/arrow-right.svg) no-repeat 6.52rem center;-webkit-background-size: auto 0.32rem;background-size: auto 0.32rem;}
+      .cont span{float: right;font-size: 0.32rem;color:#909090;}
+      .cont h3{font-size: 0.3rem;color: #000000;display: block;}
+      .yd-popup-center{width: 5.28rem;height: auto;background: none;transition:all 0.2s;}
+      .yd-popup-center.active{top: 66%;}
+      .addrView .yd-confirm{width: 5.28rem;background: #fff;border-radius:0.12rem !important;overflow: hidden;}
+      .yd-confirm.qb:before{width: 0.7rem;margin: auto;background-image:url(../image/qb.png);position: relative;right: -0.04rem;}
+      .yd-confirm.mm:before{width: 0.7rem;margin: auto;background-image:url(../image/mm.png);}
+      .yd-confirm-bd input{display: block;margin:0.16rem auto;background: #fafafa;border-radius: 0.1rem;height: 0.8rem;line-height: 0.34rem;font-size: 0.3rem;color: #000;border:0.014rem solid #dfdfdf;width: 4.5rem;text-align: center;transition:all 0.4s;}
+      .yd-confirm-bd input:focus{border-color: #f73a3f;box-shadow:0 0 0.12rem rgba(247,58,63,0.12)}
+      .yd-input-password{display: none;}
+      .addrView button{background: linear-gradient(135deg,#f73a3f,#fe613d);height: 0.88rem;line-height: 0.88rem;text-align: center;width: 100%;display: block;border-radius:0.1rem;font-size: 0.32rem;color: #fff;margin-top: 0.5rem;}
+      .yd-input{display: block;position: relative;}
+      .yd-input a.yd-input-clear{position: absolute;right: 0.26rem;top: 0.23rem;display: block;width: 0.35rem;height: 0.35rem;background:url(../image/public/clear.svg) no-repeat center center;-webkit-background-size: 100% 100%;background-size: 100% 100%;}
+      .yd-input a:after{display: none;}
+      .yd-input-password{display: none;}
+      .yd-accordion{background:none;}
+    </style>
+</head>
+<body>
+  <div id="myEla">
+    <header class="page">
+      <ul>
+        <li>
+          <b class="back" @click="api.closeWin();"></b>
+          <span v-cloak>{{ $t('钱包设置') }}</span>
+        </li>
+      </ul>
+    </header>
+    <div class="addrView">
+      <div class="avTop">
+        <div class="walletIcon" :style="{background:'linear-gradient(120deg, '+ walletInfo.iconColor +')'}"></div>
+      </div>
+      <ul>
+        <li>
+          <div class="cont" @click="isSetname = true;">
+            <span v-cloak>{{ walletInfo.walletName }}</span>
+            <h3 v-cloak>{{ $t('钱包名称') }}</h3>
+          </div>
+          <div class="cont">
+            <b @click="openSetPassword(isPassword)"><yd-switch v-model="isPassword" color="#f9493e" ></yd-switch></b>
+            <h3 v-cloak>{{ $t('钱包支付密码') }}</h3>
+          </div>
+          <div class="cont more" @click="goWords()">
+            <h3 v-cloak>{{ $t('备份短语') }}</h3>
+          </div>
+          <div class="cont more" @click="exportpurse()">
+            <h3 v-cloak>{{ $t('导出钱包文件') }}</h3>
+          </div>
+        </li>
+      </ul>
+      <button v-cloak @click="remove()">{{ $t('安全退出钱包') }}</button>
+    </div>
+    <yd-popup v-model="isSetname" position="center">
+      <div class="yd-confirm qb">
+        <div class="yd-confirm-hd">
+          <strong class="yd-confirm-title" v-cloak>{{ $t('钱包名称') }}</strong>
+        </div>
+        <div class="yd-confirm-bd">
+          <yd-input v-model="walletName" ref="walletName" :show-clear-icon="false" :placeholder="$t('请输入钱包名称')"></yd-input>
+        </div>
+        <div class="yd-confirm-ft">
+          <a href="javascript:;" class="yd-confirm-btn" @click="isSetname = false" v-cloak>{{ $t('取消') }}</a>
+          <a href="javascript:;" class="yd-confirm-btn" @click="setName()" v-cloak>{{ $t('确定') }}</a>
+        </div>
+      </div>
+    </yd-popup>
+    <yd-popup v-model="isSetpassword" :close-on-masker="false" position="center">
+      <div class="yd-confirm mm">
+        <div class="yd-confirm-hd">
+          <strong class="yd-confirm-title" v-cloak>{{ $t('密码') }}</strong>
+        </div>
+        <div class="yd-confirm-bd">
+          <yd-input v-model="payPassword" ref="payPassword" :placeholder="passPlaceholder" type="password"></yd-input>
+        </div>
+        <div class="yd-confirm-ft">
+          <a href="javascript:;" class="yd-confirm-btn default" @click="isSetpassword = false" v-cloak>{{ $t('取消') }}</a>
+          <a href="javascript:;" class="yd-confirm-btn primary" @click="setPassword()" v-cloak>{{ $t('确定') }}</a>
+        </div>
+      </div>
+    </yd-popup>
+    <yd-popup v-model="isSetpassword1" :close-on-masker="false" position="center">
+      <div class="yd-confirm mm">
+        <div class="yd-confirm-hd">
+          <strong class="yd-confirm-title" v-cloak>{{ $t('密码') }}</strong>
+        </div>
+        <div class="yd-confirm-bd">
+          <yd-input v-model="payPassword1" ref="payPassword1" :placeholder="passPlaceholder" type="password"></yd-input>
+        </div>
+        <div class="yd-confirm-ft">
+          <a href="javascript:;" class="yd-confirm-btn default" @click="isSetpassword1 = false" v-cloak>{{ $t('取消') }}</a>
+          <a href="javascript:;" class="yd-confirm-btn primary" @click="func" v-cloak>{{ $t('确定') }}</a>
+        </div>
+      </div>
+    </yd-popup>
+  </div>
+<script type="text/javascript" src="../script/fastclick.min.js"></script>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript" src="../script/vue.js"></script>
+<script type="text/javascript" src="../script/ydui.js"></script>
+<script type="text/javascript" src="../script/jquery.js"></script>
+<script type="text/javascript" src="../script/vue-i18n.js"></script>
+<script type="text/javascript" src="../script/salmon.min.js"></script>
+<script type="text/javascript" src="../script/public.js"></script>
+<script>
+    var myEla = '';
+    apiready = function(){
+      $api.fixStatusBar( $api.dom('header') );
+      $api.fixStatusBar( $api.dom('#myEla') );
+      myEla = new Vue({
+          el: "#myEla",
+          i18n,
+          data: {
+            walletInfo:{},
+            luke:{},
+            opts:{},
+            isPassword:false,
+            isSetname:false,
+            walletName:'',
+            isSetpassword:false,
+            payPassword:'',
+            passPlaceholder:'',
+            password1:'',
+            isSetpassword1:false,
+            payPassword1:'',
+            func:function(){}
+          },
+          mounted: function () {
+            this.passPlaceholder = this.$t('请输入支付密码');
+            if(api.systemType == 'ios'){
+              $("input").focus(function(){
+                setTimeout(function(){
+                  $('.yd-popup-center').addClass('active');
+                },200)
+              })
+              $("input").blur(function(){
+                $('.yd-popup-center').removeClass('active');
+              })
+            }
+            var index = api.pageParam.index;
+            this.walletInfo = JSON.parse(localStorage.walletList)[index];
+            this.opts = {lang:localStorage.lang,baseUrl:localStorage.baseUrl,m:1,n:1,loglevel:'debug'};
+            this.luke = new salmon.Wallet(this.opts);
+            this.luke.client.import(this.walletInfo.walletJson);
+            this.isPassword = this.luke.client.isPrivKeyEncrypted();
+          },
+          methods: {
+            // Modify wallet local name
+            setName:function(){
+              var _this = this;
+              if(
+                verification('isnul',this.walletName,this.$t('名称不能为空'),this)
+              ){
+                setLoclaList(this.walletInfo.walletId,'walletName',this.walletName,function(){
+                  _this.isSetname = false;
+                  _this.walletInfo.walletName = _this.walletName;
+                  api.execScript({
+                    name:'walletlist',
+                    script: 'myEla.walletList = JSON.parse(localStorage.walletList)'
+                  });
+                },false)
+              }
+            },
+            openSetPassword:function(type){
+              if(type){
+                this.passPlaceholder = this.$t('请输入支付密码');
+              }else{
+                this.passPlaceholder = this.$t('请设置新支付密码');
+              }
+              this.isSetpassword = true;
+            },
+            // Modify payment password
+            setPassword:function(){
+              var _this = this;
+              if(
+                verification('isnul',this.payPassword,this.$t('支付密码不得为空'),this)
+              ){
+                if(_this.isPassword){
+                  try{
+                    _this.luke.client.decryptPrivateKey(_this.payPassword);
+                    var str = _this.luke.client.export();
+                    setLoclaList(_this.walletInfo.walletId,'walletJson',str,function(){
+                      _this.isPassword = false;
+                      _this.isSetpassword = false;
+                    },false)
+                  }catch(err){
+                    if(err=='Error: Could not decrypt'){
+                      _this.$dialog.toast({mes:_this.$t('密码错误'),icon:'error'});
+                    }else{
+                      _this.$dialog.toast({mes:_this.$t('未知错误'),icon:'error'});
+                    }
+                  }
+                }else{
+                  if(verification('password',_this.payPassword,this.$t('密码最少8位字符'),_this)){
+                    if(_this.password1){
+                      if(_this.password1 != _this.payPassword){
+                        _this.$dialog.toast({mes:_this.$t('两次密码不一致'),timeout: 1000});
+                      }else{
+                        _this.luke.client.encryptPrivateKey(_this.payPassword,{})
+                        var str = _this.luke.client.export();
+                        setLoclaList(_this.walletInfo.walletId,'walletJson',str,function(){
+                          _this.isPassword = true;
+                          _this.isSetpassword = false;
+                        },false)
+                      }
+                    }else{
+                      _this.password1 = _this.payPassword;
+                      _this.payPassword = '';
+                      _this.passPlaceholder = this.$t('请再次输入');
+                    }
+                  }
+                }
+              }
+            },
+            goWords:function(){
+              var _this = this;
+              if(_this.isPassword){
+                _this.isSetpassword1 = true;
+                _this.func = function(){
+                  var index = api.pageParam.index;
+                  var _luke = new salmon.Wallet(_this.opts);
+                  _luke.client.import(JSON.parse(localStorage.walletList)[index].walletJson);
+                  try{
+                    _luke.client.decryptPrivateKey(_this.payPassword1);
+                    _this.isSetpassword1 = false;
+                    var mnemonicWords = JSON.parse(_luke.client.export()).mnemonic;
+                    setTimeout(function(){
+                      api.openWin({allowEdit:'true',name: 'wordsprompt',url: './wordsprompt.html',pageParam:{index:mnemonicWords}});
+                    },200)
+                  }catch(err){
+                    if(err=='Error: Could not decrypt'){
+                      _this.$dialog.toast({mes:_this.$t('密码错误'),icon:'error'});
+                    }else{
+                      _this.$dialog.toast({mes:_this.$t('未知错误'),icon:'error'});
+                    }
+                  }
+                }
+              }else{
+                var mnemonicWords = JSON.parse(_this.luke.client.export()).mnemonic;
+                api.openWin({allowEdit:'true',name: 'wordsprompt',url: './wordsprompt.html',pageParam:{index:mnemonicWords}});
+              }
+            },
+            exportpurse:function(){
+              var _this = this;
+              if(_this.isPassword){
+                _this.isSetpassword1 = true;
+                _this.func = function(){
+                  var paypass = _this.payPassword1;
+                  var index = api.pageParam.index;
+                  var _luke = new salmon.Wallet(_this.opts);
+                  _luke.client.import(JSON.parse(localStorage.walletList)[index].walletJson);
+                  // 验证支付密码
+                  // Verify payment password
+                  try{
+                    _luke.client.decryptPrivateKey(_this.payPassword1);
+                    _this.isSetpassword1 = false;
+                    setTimeout(function(){
+                      api.openWin({allowEdit:'true',name: 'exportpurse',url: './exportpurse.html',pageParam:{index:api.pageParam.index,paypassword:paypass}});
+                    },200)
+                  }catch(err){
+                    if(err=='Error: Could not decrypt'){
+                      _this.$dialog.toast({mes:_this.$t('密码错误'),icon:'error'});
+                    }else{
+                      _this.$dialog.toast({mes:_this.$t('未知错误'),icon:'error'});
+                    }
+                  }
+                }
+              }else{
+                api.openWin({allowEdit:'true',name: 'exportpurse',url: './exportpurse.html',pageParam:{index:api.pageParam.index,paypassword:_this.payPassword1}});
+              }
+            },
+            remove:function(){
+              var _this = this;
+              _this.$dialog.confirm({
+                title: _this.$t('系统提醒'),
+                mes: '<span>'+ _this.$t('请确认您已做好钱包备份<br>如果丢失或遗忘，任何人都无法<br>帮您恢复钱包') +'</span>',
+                opts: [{txt: _this.$t('取消')},{txt: _this.$t('确定退出钱包'),
+                  callback: function() {
+                    var index = api.pageParam.index;
+                    var list = JSON.parse(localStorage.walletList);
+                    list.splice(index,1);
+                    localStorage.walletList = JSON.stringify(list);
+                    var walletList = JSON.parse(localStorage.walletList);
+                    if(_this.walletInfo.walletId == JSON.parse(localStorage.walletOpen).walletId){
+                      if(walletList.length){
+                        localStorage.walletOpen = JSON.stringify(walletList[0]);
+                      }else{
+                        localStorage.walletOpen = '{}';
+                      }
+                    }
+                    if(!walletList.length){
+                      api.closeToWin({
+                        name: 'root'
+                      });
+                    }
+                    api.execScript({
+                      name:'walletlist',
+                      script: 'myEla.walletList = JSON.parse(localStorage.walletList)'
+                    });
+                    api.sendEvent({
+                      name: 'changeWallet',
+                    });
+                    api.closeWin();
+                  }
+                }]
+              });
+            }
+          },
+          watch:{
+            isSetpassword1:function(val){
+              if(!val){
+                this.payPassword1 = '';
+              }
+            },
+            isSetpassword:function(val){
+              if(!val){
+                this.payPassword = '';
+                this.password1 = '';
+              }
+            }
+          }
+      })
+    }
+</script>
+</body>
+</html>

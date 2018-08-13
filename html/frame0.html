@@ -1,0 +1,198 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>首页</title>
+    <link rel="stylesheet" type="text/css" href="../css/api.css"/>
+    <link rel="stylesheet" href="../css/ydui.css">
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/>
+    <style>
+        body{height:auto !important;min-height: 100% !important;background: #f5f6f8 !important;}
+        #myEla{padding: 1px 0.28rem;}
+        .indexTop{background: linear-gradient(45deg,#f73a3f,#fe613d);height: 2.4rem;margin-top: 0.19rem;position: relative;border-radius: 0.1rem;overflow: hidden;box-shadow:0 0.08rem 0.45rem rgba(225,9,12,0.2);}
+        .indexTop:after{content: '';display: block;width: 1.91em;height: 1.58em;background:url(../image/index/main_bg.png) no-repeat right top;-webkit-background-size: 100% 100%;background-size: 100% 100%;position: absolute;top: 0;right: 0; }
+        .indexTop h2{font-size: 0.36rem;color: #ffbcbc;line-height: 0.36rem;padding-top: 0.68rem;margin-bottom: 0.24rem;text-indent: 0.54rem;}
+        .indexTop h4{line-height: 0.6rem;font-size: 0.6rem;height: 0.6rem;color: #fff;text-indent: 0.54rem;font-weight: 400;}
+        .indexTop h4 span{display: inline;line-height: 0.6rem;color: #fff;}
+        .indexTop h4 b{font-weight: 400;font-size: 0.54rem;}
+        #myEla ul{padding: 1px 0;padding-bottom: 0.3rem;}
+        #myEla ul li{height: 1.36rem;background: #fff;border-radius: 0.1rem;margin-top: 0.28rem;box-shadow:0 0.08rem 0.45rem rgba(0,0,0,0.05);position: relative;}
+        #myEla ul li span{float: right;display: block;margin-right: 0.32rem;line-height: 1.36rem;font-size: 0.3rem;color: #292526;}
+        #myEla ul li h3{font-size: 0.34rem;color: #1f2631;line-height: 0.34rem;padding-top: 0.32rem;margin-bottom: 0.18rem;padding-left: 1.2rem;}
+        #myEla ul li h5{padding-left: 1.2rem;font-size: 0.28rem;color: #65707f;line-height: 0.28rem;font-weight: 400;text-overflow:ellipsis; white-space:nowrap;}
+        #myEla ul li .icon{width: 0.65rem;height: 0.65rem;border-radius: 50%;background-repeat: no-repeat;background-position: center center;-webkit-background-size: auto 0.35rem;background-size: auto 0.35rem;box-shadow:0 0.08rem 0.45rem rgba(0,0,0,0.05);position: absolute;left: 0.28rem;top: 0.355rem;}
+        #myEla ul li b{font-weight: 400;font-size: 0.28rem;}
+        #myEla ul li h5 b{font-size: 0.2rem;position: relative;top: -0.02rem;}
+    </style>
+</head>
+<body>
+  <div id="myEla">
+    <div class="indexTop" v-cloak>
+      <h2 v-cloak>{{ $t('总资产') }}</h2>
+      <h4><span v-cloak><i v-if="priceShow != 'true'">{{(zongBalance*unitPrice).toFixed(2)}}</i><i v-if="priceShow == 'true'">***</i></span> <b v-cloak> {{currency}}</b></h4>
+    </div>
+    <ul v-cloak>
+      <li @click="goReceive()">
+        <div class="icon" style="background-color: #0a1f83;background-image: url(../image/logo3.png);"></div>
+        <span v-cloak><i v-if="priceShow != 'true'">≈{{(zongBalance*unitPrice).toFixed(2)}}</i><i v-if="priceShow == 'true'">***</i> <b>{{currency}}</b></span>
+        <h3 v-cloak>ELA</h3>
+        <h5 v-cloak>{{balance}} <b v-cloak v-if="sdzBalance>0">({{$t('锁定中')+ ':' + sdzBalance}})</b></h5>
+      </li>
+    </ul>
+  </div>
+<script type="text/javascript" src="../script/fastclick.min.js"></script>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript" src="../script/vue.js"></script>
+<script type="text/javascript" src="../script/ydui.js"></script>
+<script type="text/javascript" src="../script/jquery.js"></script>
+<script type="text/javascript" src="../script/vue-i18n.js"></script>
+<script type="text/javascript" src="../script/public.js"></script>
+<script type="text/javascript" src="../script/salmon.min.js"></script>
+<script>
+    var myEla = '';
+    apiready = function(){
+       myEla = new Vue({
+        el: "#myEla",
+        i18n,
+        data: {
+          luke:{},
+          unitPrice:0,
+          localOpen:{},
+          opts:{},
+          balance:0,
+          sdzBalance:0,
+          zongBalance:0,
+          currency: localStorage.currency,
+          priceShow: localStorage.priceShow
+        },
+        mounted: function () {
+          var _this = this;
+          this.opts = {lang:localStorage.lang,baseUrl:localStorage.baseUrl,m:1,n:1,loglevel:'debug'};
+          this.luke = new salmon.Wallet(this.opts);
+          downLoad(function(){
+            _this.getBalance(function(){
+              setTimeout(function(){
+                api.refreshHeaderLoadDone()
+              },1000);
+            });
+          });
+          if(localStorage.walletOpen){
+            this.$dialog.loading.open(this.$t('加载中'));
+            this.localOpen = JSON.parse(localStorage.walletOpen);
+            // Import the wallet
+            if(JSON.parse(localStorage.walletList).length){
+              this.luke.client.import(this.localOpen.walletJson);
+              _this.getBalance();
+              setInterval(function(){
+                _this.getBalance();
+              },10000);
+            }
+          }
+          api.addEventListener({
+            name: 'changeWallet'
+          }, function(ret, err) {
+            _this.balance = 0;
+            _this.sdzBalance = 0
+            _this.zongBalance = 0;
+            _this.notifications = [];
+            _this.$dialog.loading.open(_this.$t('加载中'));
+            _this.localOpen = JSON.parse(localStorage.walletOpen);
+            // Import new wallet
+            if(JSON.parse(localStorage.walletList).length){
+              _this.luke.client.import(_this.localOpen.walletJson);
+              _this.getBalance();
+            }
+            _this.getTxProposals()
+          });
+          api.addEventListener({
+            name: 'changeCurrency'
+          }, function(ret, err) {
+            _this.unitPrice = 0;
+            _this.currency = localStorage.currency;
+            _this.$dialog.loading.open(_this.$t('加载中'));
+            _this.localOpen = JSON.parse(localStorage.walletOpen);
+            if(JSON.parse(localStorage.walletList).length){
+              _this.luke.client.import(_this.localOpen.walletJson);
+              _this.getBalance();
+            }
+          });
+          api.addEventListener({
+            name: 'changeLanguage'
+          }, function(ret, err) {
+            localStorage.lang == 'en' ? myEla.$i18n.locale = 'en' : myEla.$i18n.locale = 'zh';
+          });
+          api.addEventListener({
+            name: 'changePriceShow'
+          }, function(ret, err) {
+            _this.priceShow = localStorage.priceShow
+          });
+          if(localStorage.walletOpen){
+            setTimeout(function(){
+              _this.getTxProposals()
+            },20)
+          }
+        },
+        methods: {
+          getBalance:function(func){
+            func = func || function(){}
+            var _this = this;
+            // 获取实时价格
+            // Get real-time price
+            api.ajax({
+              url: 'https://api2.mytoken.org/currency/currencydetail?com_id=ela_cny&market_id=1303&market_name=cmc&symbol=ELA&anchor=CNY&timestamp=1525427345732&code=709bb9be45b059fa8062657271400654&v=1.4.0&platform=m&language=zh_CN&',
+              method: 'get',
+            }, function(ret, err) {
+              if(ret && ret.code == 0){
+                if(_this.currency == 'CNY'){
+                  _this.unitPrice = ret.data.price;
+                }else{
+                  _this.unitPrice = ret.data.price_usd;
+                }
+              }
+            });
+            // 获取钱包余额
+            // Get wallet balance
+            this.luke.client.getBalance({},function (err, respBody,respHeader){
+              if(respBody){
+                _this.balance = (respBody.availableAmount / 100000000).toFixed(5);
+                var z = respBody.bcTotalAmount;
+                if(!z){
+                  z = respBody.totalAmount
+                }
+                _this.sdzBalance = ((z - respBody.availableAmount) / 100000000).toFixed(5);
+                _this.zongBalance = z/100000000;
+              }
+              func();
+              _this.$dialog.loading.close();
+            });
+          },
+          getTxProposals:function(){
+            // Obtaining unfinished transactions
+            this.luke.client.getTxProposals(this.opts,function(err,txp){
+              if(txp != '' && txp){
+                api.openFrame({
+                  name: 'paymentmask',
+                  url: './paymentmask.html',
+                  bgColor: 'rgba(0,0,0,0)',
+                  pageParam:{txp:txp}
+                });
+              }
+            });
+          },
+          goReceive:function(){
+            api.sendEvent({
+              name: 'changeGroup',
+            });
+            api.setFrameGroupIndex({
+              name: 'group',
+              index: 1
+            });
+          }
+        }
+      })
+    }
+</script>
+</body>
+</html>

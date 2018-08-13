@@ -1,0 +1,151 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>收款</title>
+    <link rel="stylesheet" type="text/css" href="../css/api.css"/>
+    <link rel="stylesheet" href="../css/ydui.css">
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/>
+    <style>
+      html{background: #f5f6f8;}
+      body{height:auto !important;background: none !important;}
+      #myEla{padding: 1px 0;margin-top: 1.01rem;}
+      #qrcode{padding-top: 0.86rem;position: relative;z-index: 1;}
+      #qrcode canvas{width: 4.22rem;margin: auto;}
+      #qrcode img{width: 4.22rem;margin: auto;}
+      #qrcode1{display: none;}
+      .btnAll{padding: 0 0.8rem;margin-top: 0.1rem;}
+      .btnAll button{background: linear-gradient(45deg,#f73a3f,#fe613d);font-size: 0.3rem;margin-bottom: 0.26rem;color: #fff;text-align: center;line-height: 0.84rem;height: 0.84rem;border-radius: 0.1rem;width:100%;display: block;border:0.014rem solid rgba(0,0,0,0);}
+      .btnAll button:last-child{color: #f73a3f;background:none;border-color: #f9483e;}
+      .card{line-height: 0;text-align: center;margin: auto;margin-top: 0.7rem;width: 6.29rem;height: 7.19rem;background:url(../image/wallet/receive_bg.png) no-repeat;-webkit-background-size: 100% 100%;background-size: 100% 100%;position: relative;}
+      .card p{font-size: 0.26rem;color: #000000;line-height: 0.3rem;text-align: center;margin-top: 1.14rem;}
+      .card button{background: linear-gradient(45deg,#f73a3f,#fe613d);background: none;font-size: 0.3rem;margin-bottom: 0.26rem;color: #f73a3f;text-align: center;line-height: 0.84rem;height: 0.84rem;border-radius: 0.1rem;display: block;border:0.014rem solid rgba(0,0,0,0);position: absolute;top: 2.54rem;z-index: 0;width: 4.2rem;left: 1.05rem;}
+    </style>
+</head>
+<body>
+  <div id="myEla">
+    <header class="page"><ul><li>
+      <b class="back" @click="api.closeWin();"></b><span v-cloak>{{ $t('收款') }}</span>
+    </li></ul></header>
+    <div class="card">
+      <span @click="newAddr()">
+        <div id="qrcode"></div>
+        <button v-cloak>{{ $t('生成收款地址') }}</button>
+      </span>
+      <div id="qrcode1"><canvas></canvas></div>
+      <p v-cloak>{{ addr }}</p>
+    </div>
+    <div class="btnAll">
+      <button @click="copy()" v-cloak>{{ $t('复制收款地址') }}</button>
+      <button @click="saveImg()" v-cloak>{{ $t('下载二维码') }}</button>
+    </div>
+  </div>
+<script type="text/javascript" src="../script/fastclick.min.js"></script>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript" src="../script/vue.js"></script>
+<script type="text/javascript" src="../script/ydui.js"></script>
+<script type="text/javascript" src="../script/jquery.js"></script>
+<script type="text/javascript" src="../script/vue-i18n.js"></script>
+<script type="text/javascript" src="../script/salmon.min.js"></script>
+<script type="text/javascript" src="../script/public.js"></script>
+<script type="text/javascript" src="../script/qrcode.min.js"></script>
+<script>
+    var myEla = '';
+    apiready = function(){
+      $api.fixStatusBar( $api.dom('header') );
+      $api.fixStatusBar( $api.dom('#myEla') );
+      myEla = new Vue({
+        el: "#myEla",
+        i18n,
+        data: {
+          luke:{},
+          addr:'',
+          localOpen:{},
+          qrcode:'',
+          opts:{}
+        },
+        mounted: function () {
+          this.opts = {lang:localStorage.lang,baseUrl:localStorage.baseUrl,m:1,n:1,loglevel:'debug'};
+          this.luke = new salmon.Wallet(this.opts);
+          this.localOpen = JSON.parse(localStorage.walletOpen);
+          this.addr = this.localOpen.address;
+          var _this = this;
+          _this.luke.client.import(_this.localOpen.walletJson);
+          _this.qrcode = new QRCode('qrcode', {
+            text: _this.addr ,
+            width: 440,
+            height: 440,
+            colorDark : '#000000',
+            colorLight : '#ffffff',
+          });
+        },
+        methods: {
+          saveImg:function(){
+            var _this = this;
+            var canvas = document.getElementById('qrcode').getElementsByTagName('canvas')[0];
+            var canvas1 = document.getElementById('qrcode1').getElementsByTagName('canvas')[0];
+            var content=canvas.getContext("2d");
+            var content1=canvas1.getContext("2d");
+            var width=canvas.getAttribute("width");
+            var height=canvas.getAttribute("height");
+            var data=content.getImageData(0,0,width,height);
+            width=parseInt(width)+400;
+            height=parseInt(height)+580;
+            canvas1.setAttribute("width",width);
+            canvas1.setAttribute("height",height);
+            content1.fillStyle = '#fff';
+            content1.textAlign="center";
+            content1.fillRect(0, 0, canvas1.width, canvas1.height);
+            content1.putImageData(data,200,350);
+            content1.font="30px Arial";
+            content1.fillStyle = '#000';
+            content1.fillText(_this.addr,420,880);
+            content1.font="32px Arial";
+            content1.fillText("Hello Elastos and new world !",495,144);
+            content1.fillText(_this.$t('地址钱包名称') + '：' +  _this.localOpen.walletName ,420,260);
+            var imgObj = new Image();
+            imgObj.src = '../image/logo2.png';
+            imgObj.onload = function(){
+              var ctx = canvas1.getContext('2d');
+              ctx.drawImage(this, 125, 83);
+              var imgData = canvas1.toDataURL('image/png');
+              var trans = api.require('trans');
+              trans.saveImage({
+                base64Str: imgData.substring(22,imgData.length),
+                album:true,
+                imgPath:"fs://img/",
+                imgName:"ElaQRCode_"+ Date.parse(new Date()) / 1000 +".png"
+              }, function(ret, err) {
+                if (ret.status) {
+                  _this.$dialog.toast({mes: _this.$t('已保存到相册'),icon:'success',timeout: 1000});
+                }
+              });
+            }
+          },
+          newAddr:function(){
+            var _this = this;
+            var walletId = this.localOpen.walletId;
+            this.$dialog.loading.open(this.$t('正在生成地址'));
+            this.luke.client.createAddress({},function (err, address){
+              if(address){
+                var addr = address.address;
+                _this.qrcode.makeCode(addr);
+                _this.addr = addr;
+                setLoclaList(walletId,'address',addr);
+              }else{
+                _this.$dialog.toast({mes: _this.$t('生成地址失败'),icon:'error'});
+              }
+              _this.$dialog.loading.close();
+            });
+          },
+          copy:function(){
+            copy(this,this.addr);
+          }
+        }
+      })
+    }
+</script>
+</body>
+</html>

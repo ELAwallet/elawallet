@@ -1,0 +1,111 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>导出钱包文件</title>
+    <link rel="stylesheet" type="text/css" href="../css/api.css"/>
+    <link rel="stylesheet" href="../css/ydui.css">
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/>
+    <style>
+      html{background: #fff;}
+      body{height:auto !important;background: none !important;}
+      #myEla{padding: 1px 0.34rem;margin-top: 1.01rem;}
+      ul.list li{height: 0.88rem;position: relative;margin-bottom: 0.26rem;}
+      ul.list li input{display: block;border-radius: 0.08rem;height: 0.88rem;line-height: 0.34rem;font-size: 0.32rem;color: #000;border:0.014rem solid #e8e8e8;width: 100%-0.028rem;text-indent: 2.42rem;transition:all 0.4s;}
+      ul.list li input:focus{border-color: #f73a3f;box-shadow:0 0 0.12rem rgba(247,58,63,0.12)}
+      ul.list li label{display: block;line-height: 0.88rem;left: 0.34rem;top: 0;font-size: 0.32rem;color:#1f2631;position: absolute;z-index:-1;width: 1.85rem;}
+      #myEla button{background: linear-gradient(135deg,#f73a3f,#fe613d);height: 0.88rem;line-height: 0.88rem;text-align: center;width: 100%;display: block;border-radius:0.1rem;font-size: 0.32rem;color: #fff;margin-top: 0.5rem;}
+      .wordsText{border-radius: 0.1rem;background: #fff;box-shadow: 0 0.06rem 0.43rem rgba(90,90,90,0.22);margin-top: 0.28rem;padding: 0.28rem;margin-bottom: 0.4rem;}
+      .wordsText label{display: block;font-size: 0.3rem;color: #1f2631;line-height: 0.28rem;margin-bottom: 0.28rem;padding-left: 0.28rem;}
+      .wordsText textarea{display: block;width: 100%;border-radius: 0.1rem;background: #f3f3f3;font-size: 0.2rem;line-height: 0.3rem;height: 2.54rem;padding: 0.28rem;}
+      .yd-input{display: block;position: relative;}
+      .yd-input a.yd-input-clear{position: absolute;right:0.2rem;top: 0.27rem;display: block;width: 0.35rem;height: 0.35rem;background:url(../image/public/clear.svg) no-repeat center center;-webkit-background-size: 100% 100%;background-size: 100% 100%;}
+      .yd-input a:after{display: none;}
+      .yd-input-password{display: none;}
+      .yd-accordion{background:none;}
+    </style>
+</head>
+<body>
+  <div id="myEla">
+    <header class="page"><ul><li>
+      <b class="back" @click="api.closeWin();"></b><span v-cloak>{{ $t('导出钱包文件') }}</span>
+    </li></ul></header>
+    <div class="wordsText">
+      <label v-cloak>{{ $t('钱包文件') }}</label>
+      <textarea readonly v-model="keyJson" placeholder="" @click="copy(keyJson)"></textarea>
+    </div>
+    <ul class="list">
+      <li>
+        <label v-cloak>{{ $t('文件密码') }} :</label>
+        <yd-input slot="right" v-model="jsonpoassword" :show-success-icon="false" :show-error-icon="false" :placeholder="$t('请设置文件密码')" type="password"></yd-input>
+      </li>
+      <li>
+        <label v-cloak>{{ $t('重复密码') }} :</label>
+        <yd-input slot="right" v-model="jsonpoassword1" :show-success-icon="false" :show-error-icon="false" :placeholder="$t('请再次输入')" type="password"></yd-input>
+      </li>
+    </ul>
+    <button v-cloak @click="exportWallet()">{{ $t('导出钱包文件并复制') }}</button>
+    <div class="reminder">
+      <label>{{ $t('温馨提示') }}：</label>
+      <p>1.{{ $t('请复制粘贴文件到安全、离线的地方保存') }}</p>
+      <p>2.{{ $t('需要文件密码才能成功恢复钱包') }}</p>
+    </div>
+  </div>
+<script type="text/javascript" src="../script/fastclick.min.js"></script>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript" src="../script/vue.js"></script>
+<script type="text/javascript" src="../script/ydui.js"></script>
+<script type="text/javascript" src="../script/jquery.js"></script>
+<script type="text/javascript" src="../script/vue-i18n.js"></script>
+<script type="text/javascript" src="../script/salmon.min.js"></script>
+<script type="text/javascript" src="../script/public.js"></script>
+<script>
+    var myEla = '';
+    apiready = function(){
+      $api.fixStatusBar( $api.dom('header') );
+      $api.fixStatusBar( $api.dom('#myEla') );
+      myEla = new Vue({
+        el: "#myEla",
+        i18n,
+        data: {
+          luke:{},
+          keyJson:'',
+          jsonpoassword:'',
+          jsonpoassword1:'',
+          opts:{}
+        },
+        mounted: function () {
+          // Initialization of Wallet method
+          this.opts = {lang:localStorage.lang,baseUrl:localStorage.baseUrl,m:1,n:1,loglevel:'debug'};
+          this.luke = new salmon.Wallet(this.opts);
+        },
+        methods: {
+          exportWallet:function(){
+            if(
+              verification('isnul',this.jsonpoassword,this.$t('文件密码不得为空'),this) &&
+              verification('password',this.jsonpoassword,this.$t('密码最少8位字符'),this)
+            ){
+              if(this.jsonpoassword != this.jsonpoassword1){
+                this.$dialog.toast({mes: this.$t('两次密码不一致')});
+              }else{
+                var _this = this;
+                // Set payment password
+                _this.opts.password = api.pageParam.paypassword;
+                var index = api.pageParam.index;
+                _this.luke.client.import(JSON.parse(localStorage.walletList)[index].walletJson);
+                _this.keyJson = _this.luke.exportToFile(_this.jsonpoassword,_this.opts);
+                _this.copy(_this.keyJson)
+              }
+            }
+          },
+          copy:function(val){
+            copy(this,val);
+          }
+        }
+      })
+    }
+</script>
+</body>
+</html>

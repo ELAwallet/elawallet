@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>添加联系人</title>
+    <link rel="stylesheet" type="text/css" href="../css/api.css"/>
+    <link rel="stylesheet" href="../css/ydui.css">
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/>
+    <style>
+      html{background: #fff;}
+      body{height:auto !important;background: none !important;}
+      #myEla{padding: 1px 0.28rem;margin-top: 1.04rem;}
+      ul.list{padding-top: 0.28rem;}
+      ul.list li{height: 0.88rem;position: relative;margin-bottom: 0.26rem;}
+      ul.list li input{display: block;border-radius: 0.08rem;height: 0.88rem;line-height: 0.34rem;font-size: 0.32rem;color: #000;border:0.014rem solid #e8e8e8;width: 100%-1.528rem;padding-left: 1.8rem;transition:all 0.4s;}
+      ul.list li:last-child input{width: 100%-3.028rem;padding-right: 1rem;}
+      ul.list li input:focus{border-color: #f73a3f;box-shadow:0 0 0.12rem rgba(247,58,63,0.12)}
+      ul.list li label{display: block;line-height: 0.88rem;left: 0.34rem;top: 0;font-size: 0.32rem;color:#1f2631;position: absolute;z-index:-1;width: 1.85rem;}
+      ul.list li b{display: block;position: absolute;right: 0;top: 0;width: 0.88rem;height: 0.88rem;}
+      ul.list li b img{display: block;margin: auto;height: 0.34rem;margin-top: 0.26rem;}
+      #myEla button{background: linear-gradient(135deg,#f73a3f,#fe613d);height: 0.88rem;line-height: 0.88rem;text-align: center;width: 100%;display: block;border-radius:0.1rem;font-size: 0.32rem;color: #fff;margin-top: 0.5rem;}
+    </style>
+</head>
+<body>
+  <div id="myEla">
+    <header class="page">
+      <ul>
+        <li>
+          <b class="back" @click="api.closeWin();"></b>
+          <span v-cloak>{{ $t('添加联系人') }}</span>
+        </li>
+      </ul>
+    </header>
+    <ul class="list">
+      <li>
+        <label v-cloak>{{ $t('名称') }} :</label>
+        <yd-input slot="right" v-model="addrInfo.name" :show-clear-icon="false" :show-success-icon="false" :show-error-icon="false" :placeholder="$t('请输入名称')"></yd-input>
+      </li>
+      <li>
+        <label v-cloak>{{ $t('邮箱') }} :</label>
+        <yd-input slot="right" v-model="addrInfo.email" :show-clear-icon="false" :show-success-icon="false" :show-error-icon="false" :placeholder="$t('Name@example.com')"></yd-input>
+      </li>
+      <li>
+        <label v-cloak>{{ $t('地址') }} :</label>
+        <yd-input slot="right" v-model="addrInfo.address" :show-clear-icon="false" :show-success-icon="false" :show-error-icon="false" :placeholder="$t('请输入亦来币地址')"></yd-input>
+        <b @click="api.openWin({allowEdit:'true',name: 'scancode',url: './scancode.html',pageParam:{name:'addcontact'}})"><img src="../image/sm.svg" alt=""></b>
+      </li>
+    </ul>
+    <button v-cloak @click="saveaddr()">{{ $t('保存') }}</button>
+  </div>
+<script type="text/javascript" src="../script/fastclick.min.js"></script>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript" src="../script/vue.js"></script>
+<script type="text/javascript" src="../script/ydui.js"></script>
+<script type="text/javascript" src="../script/jquery.js"></script>
+<script type="text/javascript" src="../script/vue-i18n.js"></script>
+<script type="text/javascript" src="../script/public.js"></script>
+<script>
+    var myEla = '';
+    apiready = function(){
+      $api.fixStatusBar( $api.dom('header') );
+      $api.fixStatusBar( $api.dom('#myEla') );
+      myEla = new Vue({
+        el: "#myEla",
+        i18n,
+        data: {
+          addrInfo:{
+            name:'',
+            email:'',
+            address:'',
+          }
+        },
+        methods: {
+          saveaddr:function(){
+            if(
+              verification('isnul',this.addrInfo.name,this.$t('名称不能为空'),this) &&
+              verification('email',this.addrInfo.email,this.$t('邮箱格式不正确'),this) &&
+              verification('isnul',this.addrInfo.address,this.$t('地址不能为空'),this) &&
+              verification('address',this.addrInfo.address,this.$t('地址格式不正确'),this)
+            ){
+              var _this = this;
+              var addrList = localStorage.addressList;
+              addrList = addrList ? JSON.parse(addrList) : [];
+              var repeat = false;
+              for(var i=0;i<addrList.length;i++){
+                if(_this.addrInfo.address == addrList[i].address){
+                  repeat = true
+                }
+              }
+              if(repeat){
+                this.$dialog.toast({mes: '<span style="font-size:0.28rem">'+ this.$t('添加失败<br>该地址已存在') +'</span>',icon: 'error'});
+              }else{
+                addrList.push(this.addrInfo);
+                localStorage.addressList = JSON.stringify(addrList);
+                api.execScript({
+                  name:'address',
+                  script: 'myEla.list = JSON.parse(localStorage.addressList);myEla.searchList = JSON.parse(localStorage.addressList);'
+                });
+                api.closeWin();
+              }
+            }
+          }
+        }
+      })
+    }
+</script>
+</body>
+</html>

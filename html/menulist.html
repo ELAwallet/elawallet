@@ -1,0 +1,114 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>侧滑菜单</title>
+    <link rel="stylesheet" type="text/css" href="../css/api.css"/>
+    <link rel="stylesheet" href="../css/ydui.css">
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/>
+    <style>
+      html,body{background: rgba(0,0,0,0) !important;overflow: hidden;}
+      ::-webkit-scrollbar{display:none;}
+      .show{display: none;}
+      .menuBack img{display: block;padding: 0.36rem;height: 1rem;padding-left: 0.34rem;padding-right: 0.1rem;}
+      .walletIcon{width: 0.58rem;height: 0.58rem;border-radius: 50%;position: absolute;overflow: hidden;left: 0;top: 0.24rem;overflow: hidden;}
+      .walletIcon:before{position: absolute;left: 0;top: 0;display: block;content:'';width: 100%;height: 100%;background:url(../image/index/wallet-icon.png) no-repeat center center;-webkit-background-size: 0.32rem 0.32rem;background-size: 0.32rem 0.32rem;}
+      #myEla ul{margin-top: 0.22rem;padding:0 0.35rem;min-height: 62vh;}
+      #myEla ul li{padding-left: 1rem;position: relative;border-bottom:0.014rem solid #f2f2f2;height: 1.1rem;overflow: hidden;}
+      #myEla ul li:first-child{border-top:0.014rem solid #f2f2f2;}
+      #myEla ul li span{color: #909090;font-size: 0.32rem;display: block;line-height: 1.12rem;overflow: hidden; white-space: nowrap; text-overflow: ellipsis;width: 2.6rem;}
+      #myEla ul li.active span{color:#000;}
+      #myEla ul li.active:after{content:'';display: block;width: 0.18rem;height: 0.18rem;background: #21ba45;position: absolute;right: 0.2rem;top: 50%;transform: translate(0,-50%);border-radius: 50%;}
+      .addBtn{padding:0 0.35rem;padding-bottom: 1.28rem;margin-top: 4vh;}
+      .addBtn button{background: linear-gradient(45deg,#f73a3f,#fe613d);font-size: 0.3rem;color: #fff;text-align: center;line-height: 0.84rem;border-radius: 0.1rem;width: 100%;margin-top: 0.28rem;display: block;border:0.014rem solid rgba(0,0,0,0);}
+      .addBtn button:first-child{color: #f73a3f;background:none;border:0.014rem solid #f9483e;}
+      .yd-popup-left{box-shadow: 0.08rem 0 1rem rgba(0,0,0,0.12);}
+      .yd-mask{opacity: 0 !important;}
+    </style>
+</head>
+<body>
+  <div id="myEla">
+    <yd-popup v-model="leftWin" position="left" width="66%">
+      <div class="show">
+        <div class="menuBack" @click="leftWin = false"><img src="../image/index/errow-left.svg" alt=""></div>
+        <ul>
+          <li v-for="(list,index) in walletList" :class="{'active':selectIndex == index}" @click="switchWallet(index)">
+            <div class="walletIcon" :style="{background:'linear-gradient(120deg, '+ list.iconColor +')'}"></div>
+            <span v-cloak>{{ list.walletName }}</span>
+          </li>
+        </ul>
+        <div class="addBtn">
+          <button @click="api.openWin({allowEdit:'true',name:'personalwallet',url:'./personalwallet.html'})" v-cloak>{{ $t('创建钱包') }}</button>
+          <button @click="api.openWin({allowEdit:'true',name:'import',url:'./import.html'})" v-cloak>{{ $t('导入钱包') }}</button>
+        </div>
+      </div>
+    </yd-popup>
+  </div>
+<script type="text/javascript" src="../script/fastclick.min.js"></script>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript" src="../script/vue.js"></script>
+<script type="text/javascript" src="../script/ydui.js"></script>
+<script type="text/javascript" src="../script/jquery.js"></script>
+<script type="text/javascript" src="../script/vue-i18n.js"></script>
+<script type="text/javascript" src="../script/public.js"></script>
+<script>
+    var myEla = '';
+    apiready = function(){
+      $api.fixStatusBar( $api.dom('.show') );
+      myEla = new Vue({
+        el: "#myEla",
+        i18n,
+        data: {
+          leftWin:false,
+          walletList:[],
+          selectIndex:0
+        },
+        mounted: function () {
+          var _this = this;
+          setTimeout(function(){
+            _this.leftWin = true;
+          },100)
+          $('.show').fadeIn(150);
+          var walletList = localStorage.walletList;
+          walletList = JSON.parse(walletList)
+          this.walletList = walletList;
+          var localOpenId = JSON.parse(localStorage.walletOpen).walletId;
+          var index = 0;
+          for(var i=0;i<walletList.length;i++){
+            if(walletList[i].walletId == localOpenId){
+              index = i;break;
+            }
+          }
+          this.selectIndex = index;
+          api.addEventListener({
+            name:'viewdisappear'
+          }, function(ret, err){
+            api.closeFrame();
+          });
+        },
+        methods: {
+          switchWallet:function(index){
+            localStorage.walletOpen = JSON.stringify(this.walletList[index]);
+            this.selectIndex = index;
+            this.leftWin = false;
+            api.sendEvent({
+              name: 'changeWallet',
+            });
+          }
+        },
+        watch:{
+          leftWin:function(val){
+            if(!val){
+              setTimeout(function(){
+                api.closeFrame();
+              },300)
+            }
+          }
+        }
+      })
+    }
+</script>
+</body>
+</html>

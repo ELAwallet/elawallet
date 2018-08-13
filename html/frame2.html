@@ -1,0 +1,112 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>个人中心</title>
+    <link rel="stylesheet" type="text/css" href="../css/api.css"/>
+    <link rel="stylesheet" href="../css/ydui.css">
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/>
+    <style>
+        body{height:auto !important;min-height: 100% !important;}
+        #myEla{padding: 1px 0.28rem;}
+        #myEla ul{padding-bottom: 0.5rem;}
+        #myEla ul li{height: 1.04rem;line-height: 1.04rem;background: #fff url(../image/public/arrow-right.svg) no-repeat 6.52rem center;border-radius: 0.1rem;padding-left: 0.85rem;position: relative;font-size: 0.3rem;-webkit-background-size: auto 0.32rem;background-size: auto 0.32rem;margin-top: 0.28rem;box-shadow:0 0.06rem 0.31rem rgba(0,0,0,0.04);}
+        #myEla ul li img{position: absolute;left: 0.3rem;width: 0.3rem;top: 50%;transform: translate(0,-50%);}
+        #myEla ul li:nth-child(4) img{position: absolute;left: 0.27rem;width: 0.36rem;top: 50%;transform: translate(0,-50%);}
+        #myEla ul li:nth-child(5) img{position: absolute;left: 0.27rem;width: 0.38rem;top: 50%;transform: translate(0,-50%);}
+        .myTop{border-radius: 0.1rem;background: #fff;margin-top: 0.28rem;box-shadow:0 0.06rem 0.31rem rgba(0,0,0,0.04);line-height: 0;font-size: 0;text-align: center;padding-top: 0.4rem;padding-bottom: 0.5rem;}
+        .myTop .box{display: inline-block;width: 33%;}
+        .myTop .box h2{font-size: 0.3rem;font-weight: 600;color: #000000;line-height: 0.4rem;margin-top: 0.04rem;}
+        .myTop .box img{display: block;width: 1.52rem;margin: auto;}
+    </style>
+</head>
+<body>
+  <div id="myEla">
+    <div class="myTop">
+      <div class="box" @click="api.openWin({allowEdit:'true',name: 'walletlist',url: './walletlist.html'});">
+        <img src="../image/wallet/icon1.png" alt="">
+        <h2 v-cloak>{{ $t('钱包管理') }}</h2>
+      </div>
+      <div class="box" @click="api.openWin({allowEdit:'true',name: 'security',url: './security.html'});">
+        <img src="../image/wallet/icon2.png" alt="">
+        <h2 v-cloak>{{ $t('安全中心') }}</h2>
+      </div>
+      <div class="box" @click="api.openWin({allowEdit:'true',name: 'system',url: './system.html'});">
+        <img src="../image/wallet/icon3.png" alt="">
+        <h2 v-cloak>{{ $t('系统设置') }}</h2>
+      </div>
+    </div>
+    <ul>
+      <li>
+        <div class="cont" @click="api.openWin({allowEdit:'true',name: 'address',url: './address.html'});">
+          <img src="../image/wallet/icon1.svg">
+          <h3 v-cloak>{{ $t('地址簿') }}</h3>
+        </div>
+      </li>
+      <li>
+        <div class="cont" @click="api.openWin({allowEdit:'true',name: 'help',url: './help.html'});">
+          <img src="../image/wallet/icon2.svg">
+          <h3 v-cloak>{{ $t('帮助中心') }}</h3>
+        </div>
+      </li>
+      <li>
+        <div class="cont" @click="api.openWin({allowEdit:'true',name: 'aboutus',url: './aboutus.html'});">
+          <img src="../image/wallet/icon3.svg">
+          <h3 v-cloak>{{ $t('关于我们') }}</h3>
+        </div>
+      </li>
+      <li>
+        <div class="cont" @click="api.openWin({allowEdit:'true',name: 'support',url: './support.html'});">
+          <img src="../image/wallet/icon4.svg">
+          <h3 v-cloak>{{ $t('支持我们') }}</h3>
+        </div>
+      </li>
+      <li>
+        <div class="cont" @click="share()">
+          <img src="../image/wallet/icon5.svg">
+          <h3 v-cloak>{{ $t('分享APP') }}</h3>
+        </div>
+      </li>
+    </ul>
+  </div>
+<script type="text/javascript" src="../script/fastclick.min.js"></script>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript" src="../script/vue.js"></script>
+<script type="text/javascript" src="../script/ydui.js"></script>
+<script type="text/javascript" src="../script/jquery.js"></script>
+<script type="text/javascript" src="../script/vue-i18n.js"></script>
+<script type="text/javascript" src="../script/public.js"></script>
+<script>
+    var myEla = '';
+    apiready = function(){
+      myEla = new Vue({
+        el: "#myEla",
+        i18n,
+        mounted: function () {
+          api.addEventListener({
+            name: 'changeLanguage'
+          }, function(ret, err) {
+            localStorage.lang == 'en' ? myEla.$i18n.locale = 'en' : myEla.$i18n.locale = 'zh';
+          });
+        },
+        methods: {
+          share:function(){
+            var _this = this;
+            _this.$dialog.loading.open(this.$t('请稍后'));
+            var sharedModule = api.require('shareAction');
+            sharedModule.share({
+              text: _this.$t('ELA钱包'),
+              type: 'url',
+              path:'http://elawallet.io',
+              thumbnail:'widget://image/logo2.png'
+            });
+            _this.$dialog.loading.close();
+          }
+        },
+      })
+    }
+</script>
+</body>
+</html>

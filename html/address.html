@@ -1,0 +1,112 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>地址簿</title>
+    <link rel="stylesheet" type="text/css" href="../css/api.css"/>
+    <link rel="stylesheet" href="../css/ydui.css">
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/>
+    <style>
+      html{background: #f5f6f8;}
+      body{height:auto !important;background: none !important;}
+      #myEla{padding: 1px 0.28rem;margin-top: 1.04rem;}
+      #myEla ul.list li{height: 1.36rem;background: #fff url(../image/public/arrow-right.svg) no-repeat 6.52rem center;padding-left: 0.28rem;border-radius: 0.1rem;margin-top: 0.28rem;box-shadow:0 0.08rem 0.45rem rgba(0,0,0,0.05);position: relative;-webkit-background-size: auto 0.32rem;background-size: auto 0.32rem;}
+      #myEla ul.list li span{float: right;display: block;margin-right: 0.32rem;line-height: 1.36rem;font-size: 0.3rem;color: #292526;}
+      #myEla ul.list li h3{font-size: 0.34rem;color: #1f2631;line-height: 0.34rem;padding-top: 0.32rem;margin-bottom: 0.18rem;}
+      #myEla ul.list li h5{font-size: 0.28rem;color: #65707f;line-height: 0.28rem;font-weight: 400;}
+      .search{box-shadow:0 0.08rem 0.45rem rgba(0,0,0,0.05);margin-top: 0.28rem;border-radius: 0.1rem;background: #fff url(../image/public/search.svg) no-repeat 0.28rem center;-webkit-background-size: auto 0.36rem;background-size:auto 0.36rem;padding: 0.1rem;}
+      .search input{width: 100%;display: block;font-size: 0.3rem;color: #666;text-indent:0.5rem;padding: 0.2rem;}
+      .addrNull{background:#f5f5f5;position: fixed;width: 100%;height: 100%;z-index: 1;margin-left: -0.28rem;}
+      .addrNull .addrIcon{text-align: center;position: absolute;left: 50%;top: 35%;transform: translate(-50%,-50%);}
+      .addrNull .addrIcon img{width: 0.5rem;}
+      .addrNull .addrIcon p{font-size: 0.28rem;color: #445;}
+      .addrNull button{background: linear-gradient(135deg,#f73a3f,#fe613d);height: 0.88rem;line-height: 0.88rem;text-align: center;width: 6.94rem;display: block;border-radius:0.1rem;font-size: 0.32rem;color: #fff;display: block;margin-bottom: 0.34rem;position: fixed;bottom: 0.6rem;left: 50%;transform: translate(-50%,0);}
+    </style>
+</head>
+<body>
+  <div id="myEla">
+    <header class="page">
+      <ul>
+        <li>
+          <b class="back" @click="api.closeWin();"></b>
+          <span v-cloak>{{ $t('地址簿') }}</span>
+          <b class="more" v-if="searchList.length" @click="api.openWin({allowEdit:'true',name: 'addcontact',url: './addcontact.html'});"></b>
+        </li>
+      </ul>
+    </header>
+    <div class="addrNull" v-if="list.length == 0">
+      <div class="addrIcon">
+        <img src="../image/icon-address-book.svg">
+        <p v-cloak>{{ $t('没有联系人') }}</p>
+      </div>
+      <button v-cloak @click="api.openWin({allowEdit:'true',name: 'addcontact',url: './addcontact.html'});">{{ $t('添加联系人') }}</button>
+    </div>
+    <div class="search">
+      <input type="text" v-model="searchVal" :placeholder="$t('搜索')">
+    </div>
+    <ul class="list">
+      <li v-for="list in searchList" @click="listClick(list)">
+        <h3 v-cloak>{{list.name}}</h3>
+        <h5 v-cloak>{{list.address}}</h5>
+      </li>
+    </ul>
+  </div>
+<script type="text/javascript" src="../script/fastclick.min.js"></script>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript" src="../script/vue.js"></script>
+<script type="text/javascript" src="../script/ydui.js"></script>
+<script type="text/javascript" src="../script/jquery.js"></script>
+<script type="text/javascript" src="../script/vue-i18n.js"></script>
+<script type="text/javascript" src="../script/public.js"></script>
+<script>
+    var myEla = '';
+    apiready = function(){
+      $api.fixStatusBar( $api.dom('header') );
+      $api.fixStatusBar( $api.dom('#myEla') );
+      myEla = new Vue({
+          el: "#myEla",
+          i18n,
+          data: {
+            searchVal:'',
+            list:[],
+            searchList:[]
+          },
+          mounted: function () {
+            var addrList = localStorage.addressList;
+            addrList = addrList ? JSON.parse(addrList) : [];
+            this.list = addrList;
+            this.searchList = addrList;
+          },
+          methods: {
+            listClick:function(list){
+              var name = api.pageParam.name;
+              if(name){
+                var script = 'myEla.addrInfo.address="' + list.address + '"';
+                api.execScript({
+                  name:api.pageParam.name,
+                  script: script
+                });
+                api.closeWin();
+              }else{
+                api.openWin({allowEdit:'true',name: 'addressview',url: './addressview.html',pageParam:list});
+              }
+            }
+          },
+          watch:{
+            searchVal:function(val){
+              var slist = [];
+              for(var i=0;i<this.list.length;i++){
+                if(this.list[i].name.indexOf(val) != -1){
+                  slist.push(this.list[i])
+                }
+              }
+              this.searchList = slist;
+            }
+          }
+      })
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>助记词安全提示</title>
+    <link rel="stylesheet" type="text/css" href="../css/api.css"/>
+    <link rel="stylesheet" href="../css/ydui.css">
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/>
+    <style>
+      html{background: #fff;}
+      body{height:auto !important;background: none !important;}
+      #myEla{padding: 1px 0.34rem;margin-top: 50px;}
+      .icon{text-align: center;margin-top: 0.8rem;margin-bottom: 0.66rem;}
+      .icon img{width: 1.48rem;display: block;margin: auto;position: relative;right: -0.07rem;}
+      #myEla h2{font-size: 0.36rem;color: #000;line-height: 0.36rem;text-align: center;margin-bottom: 0.6rem;}
+      #myEla p{line-height: 0.44rem;color: #6c6c6c;font-size: 0.26rem;text-align: center;margin-bottom: 0.88rem;}
+      #myEla button{background: linear-gradient(135deg,#f73a3f,#fe613d);height: 0.88rem;line-height: 0.88rem;text-align: center;width: 100%;display: block;border-radius:0.1rem;font-size: 0.32rem;color: #fff;margin-top: 0.5rem;}
+    </style>
+</head>
+<body>
+  <div id="myEla">
+    <header class="page">
+      <ul>
+        <li><b class="back" @click="api.closeWin();" v-if="api.pageParam.index"></b><span v-cloak>{{ $t('备份助记词') }}</span></li>
+      </ul>
+    </header>
+    <div class="icon"><img src="../image/wallet/camera.png"></div>
+    <h2 v-cloak>{{ $t('温馨提示：截图是不安全的！') }}</h2>
+    <p v-html="$t('任何人只要持有你的恢复短语，就可以访问和花掉<br>你的亦来币！截图备份的方式是不安全的，建议把助记词<br>记录到纸上，进行妥善保管。')"></p>
+    <button @click="api.openWin({allowEdit:'true',name:'words',url:'./words.html',pageParam:{index:api.pageParam.index}})" v-cloak>{{ $t('我已知晓风险') }}</button>
+  </div>
+<script type="text/javascript" src="../script/fastclick.min.js"></script>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript" src="../script/vue.js"></script>
+<script type="text/javascript" src="../script/ydui.js"></script>
+<script type="text/javascript" src="../script/jquery.js"></script>
+<script type="text/javascript" src="../script/vue-i18n.js"></script>
+<script type="text/javascript" src="../script/public.js"></script>
+<script>
+    var myEla = '';
+    apiready = function(){
+      $api.fixStatusBar( $api.dom('header') );
+      $api.fixStatusBar( $api.dom('#myEla') );
+      myEla = new Vue({
+        el: "#myEla",
+        i18n,
+        mounted: function () {
+          if(!api.pageParam.index){
+            api.addEventListener({name : 'keyback'});
+          }
+        }
+      })
+    }
+</script>
+</body>
+</html>

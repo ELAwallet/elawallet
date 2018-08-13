@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>查看助记词</title>
+    <link rel="stylesheet" type="text/css" href="../css/api.css"/>
+    <link rel="stylesheet" href="../css/ydui.css">
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/>
+    <style>
+      html{background: #fff;}
+      body{height:auto !important;background: none !important;}
+      #myEla{padding: 1px 0.34rem;margin-top: 50px;}
+      .icon{text-align: center;margin-top: 0.8rem;margin-bottom: 0.9rem;}
+      .icon img{height:1.4rem;display: block;margin: auto;}
+      #myEla h2{font-size: 0.32rem;color: #000;line-height: 0.36rem;text-align: center;margin-bottom: 0.6rem;}
+      #myEla p{line-height: 0.44rem;color: #6c6c6c;font-size: 0.26rem;text-align: center;margin-bottom: 0.88rem;}
+      #myEla button{background: linear-gradient(135deg,#f73a3f,#fe613d);height: 0.88rem;line-height: 0.88rem;text-align: center;width: 100%;display: block;border-radius:0.1rem;font-size: 0.32rem;color: #fff;margin-top: 0.8rem;}
+      .words{text-align: center;line-height: 0;}
+      .words span{color:#6c6c6c;display: inline-block;height: 0.86rem;min-width: 0.86rem;border-radius: 0.1rem;background: #f3f3f3;font-size: 0.36rem;line-height: 0.88rem;text-align: center;padding: 0 0.1rem;margin:0.1rem 0.08rem;border:0.014rem solid #f3f3f3;}
+    </style>
+</head>
+<body>
+  <div id="myEla">
+    <header class="page">
+      <ul>
+        <li>
+          <b class="back" @click="api.closeWin();"></b>
+          <span v-cloak>{{ $t('查看助记词') }}</span>
+        </li>
+      </ul>
+    </header>
+    <div class="bottom">
+      <div class="icon"><img src="../image/wallet/words.png"></div>
+      <h2 v-cloak>{{ $t('请仔细记下这段话') }}</h2>
+      <div class="words">
+        <span v-for="list in walletWords" v-cloak>{{ list }}</span>
+      </div>
+      <button @click="api.openWin({allowEdit:'true',name:'wordsverify',url:'./wordsverify.html',pageParam:{index:api.pageParam.index}})" v-cloak>{{ $t('我已记下') }}</button>
+    </div>
+  </div>
+<script type="text/javascript" src="../script/fastclick.min.js"></script>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript" src="../script/vue.js"></script>
+<script type="text/javascript" src="../script/ydui.js"></script>
+<script type="text/javascript" src="../script/jquery.js"></script>
+<script type="text/javascript" src="../script/vue-i18n.js"></script>
+<script type="text/javascript" src="../script/public.js"></script>
+<script>
+    var myEla = '';
+    apiready = function(){
+      $api.fixStatusBar( $api.dom('header') );
+      $api.fixStatusBar( $api.dom('#myEla') );
+      myEla = new Vue({
+        el: "#myEla",
+        i18n,
+        data: {
+          walletWords:[]
+        },
+        mounted: function () {
+          var index = api.pageParam.index;
+          if(index){
+            var walletWords = index;
+          }else{
+            var walletWords = JSON.parse(localStorage.walletOpen).mnemonicWords;
+          }
+          this.walletWords = walletWords.split(' ');
+        }
+      })
+    }
+</script>
+</body>
+</html>

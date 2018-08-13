@@ -1,0 +1,241 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>ELA钱包</title>
+    <link rel="stylesheet" type="text/css" href="./css/api.css"/>
+    <link rel="stylesheet" type="text/css" href="./css/style.css"/>
+    <link rel="stylesheet" href="./css/ydui.css">
+    <style>
+        header{ background-color: #f5f6f8; }
+        header.active{ background-color: #fcfafa; }
+        header ul li { height: 1rem; line-height: 1rem; text-align: center; display: none; color: #565656; position: relative;font-size: 0.34rem;position: relative;border-bottom: 0.014rem solid #eeeeee; }
+        header ul li:first-child {border-color:#f5f6f8; }
+        header ul li img{display: block;height: 1rem;position: absolute;left: 0;padding: 0.35rem 0.28rem;top: 0;}
+        header ul li.active{ display: block; }
+        #main{background: #ebecef;}
+        #footer{  background-color: #f5f6f8;position: relative; }
+        #footer:after{content:'';display: block;  background-color: #d4d4d4;width: 100%; height: 0.014rem;position: absolute;left: 0;top: 0; }
+        #footer ul li{ line-height: 0.5rem;color: #b3b5bc;background: url() no-repeat center 0.15rem;padding-top: 0.5rem; background-size: auto 0.4rem; text-align: center;font-size: 0.22rem; }
+        #footer ul li.active{ color: #f9493e; }
+        #footer ul li:nth-child(1){ background-image: url(./image/public/ico-home.svg); }
+        #footer ul li:nth-child(2){ background-image: url(./image/public/ico-receive.svg); }
+        #footer ul li:nth-child(3){ background-image: url(./image/public/ico-settings.svg); }
+        #footer ul li:nth-child(1).active{ background-image: url(./image/public/ico-home-selected.svg); }
+        #footer ul li:nth-child(2).active{ background-image: url(./image/public/ico-receive-selected.svg); }
+        #footer ul li:nth-child(3).active{ background-image: url(./image/public/ico-settings-selected.svg); }
+        .flex-con{overflow: auto}
+    </style>
+</head>
+<body>
+<script>if('addEventListener' in document){document.addEventListener('DOMContentLoaded',function(){FastClick.attach(document.body);},false);}</script>
+<div id="wrap" class="flex-wrap flex-vertical">
+  <header>
+    <ul>
+      <li class="active" v-cloak>{{ $t('ELA钱包') }}
+        <span @click="openMenu()"><img src="./image/index/menu.svg" alt=""></span>
+      </li>
+      <li v-cloak>{{ $t('收付款') }}</li>
+      <li v-cloak>{{ $t('个人中心') }}</li>
+    </ul>
+  </header>
+  <div id="main" class="flex-con"></div>
+  <div id="footer">
+    <ul class="flex-wrap" >
+      <li tapmode="hover" @click="randomSwitchBtn(0);" class="flex-con active"  v-cloak>{{ $t('首页') }}</li>
+      <li tapmode="hover" @click="randomSwitchBtn(1);" class="flex-con"  v-cloak>{{ $t('收付款') }}</li>
+      <li tapmode="hover" @click="randomSwitchBtn(2);" class="flex-con"  v-cloak>{{ $t('我的') }}</li>
+    </ul>
+  </div>
+</div>
+<script type="text/javascript" src="script/fastclick.min.js"></script>
+<script type="text/javascript" src="script/api.js"></script>
+<script type="text/javascript" src="script/vue.js"></script>
+<script type="text/javascript" src="script/ydui.js"></script>
+<script type="text/javascript" src="script/jquery.js"></script>
+<script type="text/javascript" src="script/vue-i18n.js"></script>
+<script type="text/javascript" src="script/public.js"></script>
+<script type="text/javascript">
+  var myEla = '';
+  apiready = function () {
+    myEla = new Vue({
+      el: "#wrap",
+      i18n,
+      data: {
+        passwordInfo:{},
+      },
+      mounted: function () {
+        this.$dialog.loading.open(this.$t('加载中'));
+        var _this = this;
+        localStorage.baseUrl = 'https://api.elastos.org/bws/api';
+        $api.fixStatusBar( $api.dom('header') );
+        $api.fixTabBar($api.byId('footer'));
+        _this.$dialog.loading.close();
+        _this.funIniGroup();
+        api.setStatusBarStyle({
+          style: 'dark'
+        });
+        var passwordInfo = localStorage.passwordInfo;
+        if(passwordInfo){
+          this.passwordInfo = JSON.parse(passwordInfo)
+          this.checkpassword();
+        }
+        api.addEventListener({
+            name:'resume'
+        }, function(ret, err){
+          if(passwordInfo){
+            if(_this.passwordInfo.passwordSwitch){
+              var passwordInfos = JSON.parse(localStorage.passwordInfo);
+              if(passwordInfos.passwordSwitch && (new Date().getTime() - localStorage.passwordInfoUnlockingTime > 60000)){
+                openPassword();
+              }
+            }
+          }
+          api.setBlurEffect({
+            style: 'none',
+            global: true
+          });
+        });
+        api.addEventListener({
+          name:'pause'
+        }, function(ret, err){
+          localStorage.passwordInfoUnlockingTime = new Date().getTime();
+          api.setBlurEffect({
+            style: 'light',
+            alpha:'0.98',
+            global: true
+          });
+        });
+        _this.changeWallet(function(){
+          api.sendEvent({
+            name: 'changeWallet',
+          });
+        });
+        if(!this.passwordInfo){
+          if(!this.passwordInfo.passwordSwitch){
+            _this.changeWallet();
+          }
+        }
+        api.addEventListener({
+          name:'viewappear'
+        }, function(ret, err){
+          _this.changeWallet();
+        });
+        api.addEventListener({
+          name:'changeGroup'
+        }, function(ret, err){
+          _this.randomSwitchBtn(1);
+        });
+        api.addEventListener({
+          name: 'changeLanguage'
+        }, function(ret, err) {
+          localStorage.lang == 'en' ? myEla.$i18n.locale = 'en' : myEla.$i18n.locale = 'zh';
+        });
+        api.ajax({
+          url: 'http://fourplat.consuela.cn/api/contents?type=Notice'
+        },function(ret,err) {
+          if(ret){
+            if(ret.data.length){
+              var language = localStorage.lang == 'zh' ? 0 : 1;
+              var notice = {}
+              for(var i=0;i<ret.data.length;i++){
+                if(ret.data[i].cover == language){
+                  notice = ret.data[i];
+                  break;
+                }
+              }
+              var isRead = true;
+              var readNotice = JSON.parse(localStorage.readNotice ? localStorage.readNotice : '[]');
+              for(var j=0;j<readNotice.length;j++){
+                if(notice.uuid == readNotice[j]){
+                  isRead = false;
+                  break;
+                }
+              }
+              if(isRead){
+                readNotice.push(notice.uuid);
+                localStorage.readNotice = JSON.stringify(readNotice);
+                setTimeout(function(){
+                  api.openFrame({
+                    name: 'mask',
+                    url: './html/mask.html',
+                    bgColor: 'rgba(0,0,0,0)',
+                    pageParam: notice
+                  });
+                },10)
+              }
+            }
+          }
+        });
+      },
+      methods: {
+        changeWallet:function(){
+          walletListNull(function(){
+            if(!JSON.parse(localStorage.walletOpen).walletBackups){
+              setTimeout(function(){
+                api.openWin({
+                  name: 'wordsprompt',
+                  slidBackEnabled:false,
+                  url: './html/wordsprompt.html'
+                });
+              },300)
+            }
+          });
+        },
+        openMenu:function(){
+          api.openFrame({
+            name: 'menulist',
+            url: './html/menulist.html',
+            bgColor: 'rgba(0,0,0,0)'
+          });
+        },
+        checkpassword:function(){
+          if(this.passwordInfo.passwordSwitch){
+            openPassword();
+          }
+        },
+        funIniGroup:function(){
+          frames = [];
+          frames.push({name:'frame0',url:'./html/frame0.html',bgColor:'rgba(0,0,0,0)',bounces:true});
+          frames.push({name:'frame1',url:'./html/frame1.html',bgColor:'rgba(0,0,0,0)',bounces:true});
+          frames.push({name:'frame2',url:'./html/frame2.html',bgColor:'rgba(0,0,0,0)',bounces:true});
+          api.openFrameGroup({
+            name: 'group',
+            scrollEnabled: false,
+            rect: {
+              x: 0,
+              y: $api.dom('header').offsetHeight,
+              w: api.winWidth,
+              h: $api.dom('#main').offsetHeight
+            },
+            index: 0,
+            frames: frames
+          });
+        },
+        randomSwitchBtn:function(index){
+          if(index){
+            $('header').addClass('active');
+          }else{
+            $('header').removeClass('active');
+          }
+          var even = $('#footer li');
+          var even1 = $('header li');
+          if(!even.eq(index).hasClass('active')){
+            even.removeClass('active');
+            even.eq(index).addClass('active');
+            even1.removeClass('active');
+            even1.eq(index).addClass('active');
+            api.setFrameGroupIndex({
+              name: 'group',
+              index: index
+            });
+          }
+        }
+      }
+    })
+  }
+</script>
+</body>
+</html>

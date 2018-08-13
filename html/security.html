@@ -1,0 +1,170 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+    <title>安全中心</title>
+    <link rel="stylesheet" type="text/css" href="../css/api.css"/>
+    <link rel="stylesheet" href="../css/ydui.css">
+    <link rel="stylesheet" type="text/css" href="../css/style.css"/>
+    <style>
+      html{background: #f5f6f8;}
+      body{height:auto !important;background: none !important;}
+      #myEla{padding:0;}
+      header.page{background:none !important;border:0;}
+      header.page li span{color: #fff;}
+      header.page b.back{background-image: url(../image/public/back1.svg) !important;}
+      .viewTop{padding-top: 1.04rem;background: linear-gradient(45deg,#f73a3f,#fe613d);padding-bottom: 0.56rem;}
+      .viewTop img{width: 2.15rem;display: block;margin: auto;margin-top: 1.1rem;}
+      .viewTop h2{font-size: 0.34rem;color:#fff;line-height: 0.34rem;text-align: center;margin-top: 0.1rem;}
+      .addrView li{padding: 0 0.28rem;}
+      .cont{height: 1.04rem;line-height: 1.04rem;background: #fff;padding:0 0.28rem;border-radius: 0.1rem;margin-top: 0.28rem;box-shadow:0 0.08rem 0.45rem rgba(0,0,0,0.05);position: relative;}
+      .cont b{float: right;margin-top: 0.25rem;position: relative;}
+      .cont b:before{content:'';display: block;position: absolute;width: 100%;height: 100%;z-index:5;}
+      .cont.more{background: #fff url(../image/public/arrow-right.svg) no-repeat 6.52rem center;-webkit-background-size: auto 0.32rem;background-size: auto 0.32rem;}
+      .cont span{float: right;font-size: 0.32rem;color:#909090;}
+      .cont h3{font-size: 0.3rem;color: #000000;padding-left: 0.6rem;display: block;background-image:url(../image/wallet/ok0.svg);background-repeat: no-repeat;background-position: 0rem center;-webkit-background-size: auto 0.36rem;background-size: auto 0.36rem;}
+      .cont.active h3{background-image:url(../image/wallet/ok1.svg);}
+      .yd-popup-center{width: 5.28rem;height: auto;background: none;transition:all 0.2s;}
+      .yd-confirm:before{display: none;}
+      .changeZhiwen{width: 1.42rem;position: relative;margin: auto;margin-top: 0.66rem;margin-bottom: 0.3rem;}
+      .changeZhiwen img{display: block;width: 1.42rem;}
+      .changeZhiwen img.up{position: absolute;left: 0;top: 10%;animation: myfirst 1.6s infinite linear alternate;}
+      .yd-confirm-hd{margin-bottom: 0.5rem;}
+      @keyframes myfirst {
+         0% {top: 10% ;}
+         100% {top: 70%;}
+      }
+    </style>
+</head>
+<body>
+  <div id="myEla">
+    <header class="page">
+      <ul>
+        <li>
+          <b class="back" @click="api.closeWin();"></b>
+          <span v-cloak>{{ $t('安全中心') }}</span>
+        </li>
+      </ul>
+    </header>
+    <div class="addrView">
+      <div class="viewTop">
+        <img src="../image/wallet/aq.png" alt="">
+        <h2 v-html="$t('启用所有安全功能以获得最大保护')"></h2>
+      </div>
+      <ul>
+        <li>
+          <div class="cont" :class="{'active':passwordInfo.passwordSwitch}">
+            <b @click="api.openWin({allowEdit:'true',name: 'password',url: './password.html',pageParam:{param:true,type:passwordInfo.passwordSwitch},slidBackEnabled:false,animation:{type:'movein',subType:'from_bottom',duration:500}})"><yd-switch v-model="passwordInfo.passwordSwitch" color="#f9493e" ></yd-switch></b>
+            <h3 v-cloak>{{ $t('PIN码') }}</h3>
+          </div>
+          <div class="cont" :class="{'active':passwordInfo.fingerprintSwitch}" v-if="istouchID">
+            <b @click="fingerprintSwitch()"><yd-switch v-model="passwordInfo.fingerprintSwitch" color="#f9493e" ></yd-switch></b>
+            <h3 v-cloak>{{ fingerprintsText }}</h3>
+          </div>
+        </li>
+      </ul>
+      <yd-popup v-model="show3" position="center">
+        <div class="yd-confirm">
+          <div class="changeZhiwen">
+            <img src="../image/wallet/a.png">
+            <img src="../image/wallet/b.png" class="up">
+          </div>
+          <div class="yd-confirm-hd">
+            <strong class="yd-confirm-title" v-cloak>{{ $t('请验证指纹') }}</strong>
+          </div>
+        </div>
+      </yd-popup>
+    </div>
+  </div>
+<script type="text/javascript" src="../script/fastclick.min.js"></script>
+<script type="text/javascript" src="../script/api.js"></script>
+<script type="text/javascript" src="../script/vue.js"></script>
+<script type="text/javascript" src="../script/ydui.js"></script>
+<script type="text/javascript" src="../script/jquery.js"></script>
+<script type="text/javascript" src="../script/vue-i18n.js"></script>
+<script type="text/javascript" src="../script/public.js"></script>
+<script>
+    var myEla = '';
+    apiready = function(){
+      $api.fixStatusBar( $api.dom('header') );
+      $api.fixStatusBar( $api.dom('.viewTop') );
+      myEla = new Vue({
+        el: "#myEla",
+        i18n,
+        data: {
+          istouchID:false,
+          show3:false,
+          passwordInfo:{},
+          fingerprintsText:''
+        },
+        mounted: function () {
+          this.fingerprintsText = this.$t('指纹解锁')
+          var _this = this;
+          if(api.deviceModel == 'iPhone10,3'){
+            this.fingerprintsText = this.$t('面容ID')
+          }
+          api.addEventListener({
+            name: 'verificationsuccess'
+          }, function(ret, err) {
+            if(_this.passwordInfo.passwordSwitch){
+              _this.passwordInfo.passwordSwitch = false;
+              _this.passwordInfo.fingerprintSwitch = false;
+              _this.passwordInfo.password = '';
+              localStorage.passwordInfo = JSON.stringify(_this.passwordInfo);
+            }else{
+              _this.passwordInfo.passwordSwitch = true;
+              _this.passwordInfo.fingerprintSwitch = false;
+              _this.passwordInfo.password = ret.value.password;
+              localStorage.passwordInfo = JSON.stringify(_this.passwordInfo);
+            }
+          });
+          setBarStyleToggle('light','dark');
+          var _this = this;
+          var touchID = api.require('touchID');
+          touchID.isValid(function(ret) {
+            if (ret.status) {
+              _this.istouchID = true;
+            }
+          });
+          var passwordInfo = localStorage.passwordInfo;
+          this.passwordInfo = passwordInfo ? JSON.parse(passwordInfo) : {
+            passwordSwitch:false,
+            fingerprintSwitch:false,
+            password:'',
+          };
+        },
+        methods: {
+          fingerprintSwitch:function(){
+            var _this = this;
+            var passwordInfo = localStorage.passwordInfo;
+            this.passwordInfo = passwordInfo ? JSON.parse(passwordInfo) : {
+              passwordSwitch:false,
+              fingerprintSwitch:false,
+              password:'',
+            };
+            if(this.passwordInfo.passwordSwitch){
+              if(api.systemType != 'ios'){
+                _this.show3 = true;
+              }
+              touchID(this,function(){
+                _this.show3 = false;
+                _this.passwordInfo.fingerprintSwitch = !_this.passwordInfo.fingerprintSwitch;
+                localStorage.passwordInfo = JSON.stringify(_this.passwordInfo);
+              },function(){
+                _this.show3 = false;
+              });
+            }else{
+              _this.$dialog.toast({
+                mes: _this.$t('请先设置PIN'),
+                timeout: 1000,
+              });
+            }
+          }
+        }
+      })
+    }
+</script>
+</body>
+</html>
