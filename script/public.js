@@ -283,7 +283,15 @@ const i18n = new VueI18n({
       '分享APP': 'Share APP',
       '隐藏价格': 'Hidden price',
 
-
+      '绑定ERC20地址': 'Bind ERC20',
+      '请输入ERC20地址': 'ERC20 address',
+      '1、ERC20地址，推荐钱包比特派、imtoken的ETH的收款地址，交易所的ETH收款地址无效': '1. Address of ERC20, the collection address of ETH that recommends wallet Bitpie and Imtoken, and the ETH collection address of the exchange is invalid.',
+      '2、设定空投地址会将当前钱包中的所有余额转发到一个当前钱包的内部地址，并支付相应的交易费。如果在空投截止时间点前又进行了转账操作，之前的注册空投地址的操作会失效，导致无法领到空投的代币': '2. Set the airdrop address to forward all balances in the current wallet to an internal address of the current wallet and pay corresponding transaction fees. If the money transfer operation is conducted before the airdrop deadline, the previous operation of registered airdrop address will be invalid, resulting in the inability to receive the airdrop token.',
+      '立即绑定': 'Immediate binding',
+      '添加地址需要发布一笔钱包内转账<br>并支付相应的交易费': 'Adding an address requires initiating<br>an in-wallet transfer',
+      '去支付': 'Ok',
+      '历史绑定': 'Historical binding',
+      '第一个为有效ERC地址': 'The first is the current binding address',
 
     },
 	}

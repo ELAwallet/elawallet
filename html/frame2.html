@@ -16,6 +16,7 @@
         #myEla ul li img{position: absolute;left: 0.3rem;width: 0.3rem;top: 50%;transform: translate(0,-50%);}
         #myEla ul li:nth-child(4) img{position: absolute;left: 0.27rem;width: 0.36rem;top: 50%;transform: translate(0,-50%);}
         #myEla ul li:nth-child(5) img{position: absolute;left: 0.27rem;width: 0.38rem;top: 50%;transform: translate(0,-50%);}
+        #myEla ul li:nth-child(6) img{position: absolute;left: 0.34rem;width: 0.39rem;top: 50%;transform: translate(0,-50%);}
         .myTop{border-radius: 0.1rem;background: #fff;margin-top: 0.28rem;box-shadow:0 0.06rem 0.31rem rgba(0,0,0,0.04);line-height: 0;font-size: 0;text-align: center;padding-top: 0.4rem;padding-bottom: 0.5rem;}
         .myTop .box{display: inline-block;width: 33%;}
         .myTop .box h2{font-size: 0.3rem;font-weight: 600;color: #000000;line-height: 0.4rem;margin-top: 0.04rem;}
@@ -67,6 +68,12 @@
         <div class="cont" @click="share()">
           <img src="../image/wallet/icon5.svg">
           <h3 v-cloak>{{ $t('分享APP') }}</h3>
+        </div>
+      </li>
+      <li>
+        <div class="cont" @click="api.openWin({allowEdit:'true',name: 'erc20',url: './erc20.html'});">
+          <img src="../image/wallet/icon6.svg">
+          <h3 v-cloak>{{ $t('绑定ERC20地址') }}</h3>
         </div>
       </li>
     </ul>

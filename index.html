@@ -67,6 +67,8 @@
         passwordInfo:{},
       },
       mounted: function () {
+        console.log(localStorage.walletOpen)
+        console.log(localStorage.walletList)
         this.$dialog.loading.open(this.$t('加载中'));
         var _this = this;
         localStorage.baseUrl = 'https://api.elastos.org/bws/api';

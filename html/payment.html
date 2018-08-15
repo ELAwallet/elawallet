@@ -14,6 +14,7 @@
       #myEla{padding: 1px 0.28rem;margin-top: 1.04rem;}
       ul.list{padding-top: 0.28rem;}
       ul.list li{height: 0.88rem;position: relative;margin-bottom: 0.26rem;}
+      ul.list li .mask{position: absolute;width: 100%;height: 100%;left: 0;top: 0;z-index: 8;}
       ul.list li input{display: block;border-radius: 0.08rem;height: 0.88rem;line-height: 0.34rem;font-size: 0.32rem;color: #000;border:0.014rem solid #e8e8e8;width: 100%-1.528rem;padding-left: 1.7rem;transition:all 0.4s;}
       ul.list li:first-child input{width: 100%-3.028rem;padding-right: 1rem;}
       ul.list li input:focus{border-color: #f73a3f;box-shadow:0 0 0.12rem rgba(247,58,63,0.12)}
@@ -22,6 +23,7 @@
       ul.list li b img{display: block;margin: auto;height: 0.43rem;margin-top: 0.22rem;}
       #myEla button{background: linear-gradient(135deg,#f73a3f,#fe613d);height: 0.88rem;line-height: 0.88rem;text-align: center;width: 100%;display: block;border-radius:0.1rem;font-size: 0.32rem;color: #fff;margin-top: 0.5rem;}
       header.page ul li b.more{background:url(../image/sm.svg) no-repeat center center;-webkit-background-size: 0.36rem auto;background-size: 0.36rem auto;}
+      .headerMask{width: 1rem;height: 100%;position: absolute;right: 0;top: 0;z-index: 8;}
       .yd-popup-center{width: 5.28rem;height: auto;background: none;transition:all 0.2s;}
       .yd-popup-center.active{top: 66%;}
       .addrView .yd-confirm{width: 5.28rem;background: #fff;border-radius:0.12rem !important;overflow: hidden;}
@@ -44,6 +46,7 @@
     <header class="page">
       <ul>
         <li>
+          <div class="headerMask" v-if="isErc20"></div>
           <b class="back" @click="api.closeWin();"></b>
           <span v-cloak>{{ $t('付款') }}</span>
           <b class="more" @click="api.openWin({allowEdit:'true',name: 'scancode',url: './scancode.html',pageParam:{name:'payment'}})"></b>
@@ -66,11 +69,13 @@
     </yd-popup>
     <ul class="list">
       <li>
+        <div class="mask" v-if="isErc20"></div>
         <label v-cloak>{{ $t('地址') }} :</label>
         <yd-input slot="right" v-model="addrInfo.address" :show-clear-icon="false" :show-success-icon="false" :show-error-icon="false" :placeholder="$t('请输入亦来币地址')"></yd-input>
         <b @click="api.openWin({allowEdit:'true',name: 'address',url: './address.html',pageParam:{name:'payment'}})"><img src="../image/txl.svg" alt=""></b>
       </li>
       <li class="number">
+        <div class="mask" v-if="isErc20"></div>
         <label v-cloak>{{ $t('数量') }} :</label>
         <yd-input slot="right" v-model="addrInfo.number" :show-clear-icon="false" :show-success-icon="false" :show-error-icon="false" type="number" :placeholder="$t('请输入付款数量')"></yd-input>
         <div class="b" v-cloak>{{kyAmount.toFixed(4)}}
@@ -121,16 +126,22 @@
           payPassword1:'',
           isPassword:false,
           func:'',
-          kyAmount:0
+          kyAmount:0,
+          memo:'',
+          isErc20:false,
+          localOpen:{}
         },
         mounted: function () {
           var _this = this;
+          _this.localOpen = JSON.parse(localStorage.walletOpen);
           if(api.pageParam){
             _this.addrInfo.address = api.pageParam.address;
           }
           this.opts = {lang:localStorage.lang,baseUrl:localStorage.baseUrl,m:1,n:1,loglevel:'debug'};
           this.luke = new salmon.Wallet(this.opts);
           this.luke.client.import(JSON.parse(localStorage.walletOpen).walletJson);
+
+          _this.$dialog.loading.open(_this.$t('加载中'));
           setTimeout(function(){
             _this.luke.client.getSendMaxInfo({},function(a,b){
               if(b){
@@ -141,17 +152,32 @@
                   _this.kyAmount = a4
                 }
               }
+              _this.$dialog.loading.close();
+              if(api.pageParam.type == 'erc'){
+                _this.$dialog.loading.open(_this.$t('加载中'));
+                _this.isErc20 = true;
+                _this.memo = 'AIRDROP:ERC20:' + api.pageParam.erc20;
+                _this.luke.client.createAddress({},function (err, address){
+                  if(address){
+                    var addr = address.address;
+                    _this.addrInfo.address = addr;
+                    if(!_this.maxAmount(_this.kyAmount.toFixed(4))){
+                      _this.$dialog.toast({mes: _this.$t('可用资金不足'),icon:'error'});
+                    }
+                  }else{
+                    _this.$dialog.toast({mes: _this.$t('生成地址失败'),icon:'error'});
+                  }
+                  _this.$dialog.loading.close();
+                });
+              }
             })
           },50)
-          // 判断有无支付密码
           // Decide whether or not to pay the password
           this.isPassword = this.luke.client.isPrivKeyEncrypted();
           setTimeout(function(){
-            // 获取当前未完成的交易
             // Get the unfinished transaction
             _this.luke.client.getTxProposals(_this.opts,function(err,txp){
               if(txp != '' && txp){
-                txp.memo = '';
                 if(txp[0].status == 'pending'){
                   _this.continuepay(txp,3)
                 }else if(txp[0].status == 'accepted'){
@@ -188,6 +214,9 @@
             if(vla > 0){
               _this.addrInfo.number = vla;
               _this.fee();
+              return true
+            }else{
+              return false
             }
           },
           fee:function(){
@@ -212,7 +241,6 @@
                   alert('失败1' + err)
                 }
               }else{
-                txp.memo = '';
                 _this.addrInfo.cost = txp.fee / 100000000 + ' ELA';
               }
             })
@@ -228,6 +256,7 @@
               message:this.addrInfo.remarks
             });
             var _this = this;
+            _this.opts.memo = _this.memo;
             _this.luke.client.createTxProposal(this.opts,function(err,txp){
               _this.$dialog.loading.close();
               if(err){
@@ -240,7 +269,6 @@
                   alert('error 1' + err)
                 }
               }else{
-                txp.memo = '';
                 _this.pay2(txp);
               }
             })
@@ -255,7 +283,6 @@
                 _this.clearPassword();
                 alert('error 2' + err)
               }else{
-                txp.memo = '';
                 _this.pay3(txp);
               }
             })
@@ -270,7 +297,6 @@
                 _this.clearPassword();
                 alert('error 3' + err)
               }else{
-                txp.memo = '';
                 _this.pay4(txp);
               }
             })
@@ -285,6 +311,21 @@
                 alert('error 4' + err)
               }else{
                 _this.$dialog.toast({mes:_this.$t('<span style="font-size:0.28rem;">'+ _this.$t('交易成功，等待确认') +'</span>'),icon:'success'});
+                if(api.pageParam.type == 'erc'){
+                  var walletId = _this.localOpen.walletId;
+                  if(!_this.localOpen.erc20){
+                    _this.localOpen.erc20 = []
+                  }
+                  _this.localOpen.erc20.unshift({
+                    address:api.pageParam.erc20,
+                    createdAt:Date.parse(new Date()),
+                    amount:Math.round(_this.addrInfo.number * 100000000)
+                  })
+                  setLoclaList(walletId,'erc20',_this.localOpen.erc20);
+                  api.sendEvent({
+                    name: 'bindErc',
+                  });
+                }
                 setTimeout(function(){
                   api.closeWin();
                 },2400);
